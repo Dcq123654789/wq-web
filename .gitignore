@@ -1,0 +1,33 @@
+# Dependencies
+/node_modules
+
+# Environment variables (local overrides)
+/.env.local
+/.env.*.local
+
+# Local config files
+/.umirc.local.ts
+/config/config.local.ts
+
+# Build outputs
+/src/.umi
+/src/.umi-production
+/src/.umi-test
+/.umi
+/.umi-production
+/.umi-test
+/dist
+
+# Cache
+/.mfsu
+/.swc
+/.turbopack
+
+# IDE
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
