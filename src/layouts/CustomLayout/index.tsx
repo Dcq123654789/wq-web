@@ -10,9 +10,11 @@ import {
   TeamOutlined,
   ControlOutlined,
 } from '@ant-design/icons';
-import { Breadcrumb, Button, Layout, Menu, theme } from 'antd';
+import { Breadcrumb, Button, Layout, Menu, Modal, message, theme } from 'antd';
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Outlet } from 'umi';
+import { useNavigate, useLocation, Outlet, history } from 'umi';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { useModel } from '@umijs/max';
 
 const { Header, Sider, Content } = Layout;
 
@@ -21,45 +23,50 @@ const CustomLayout = () => {
   const [activeSubMenu, setActiveSubMenu] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const { initialState, setInitialState } = useModel('@@initialState');
+
+  // 登出处理
+  const handleLogout = () => {
+    Modal.confirm({
+      title: '确认退出',
+      content: '您确定要退出登录吗？',
+      okText: '确定',
+      cancelText: '取消',
+      onOk: () => {
+        // 清除本地存储
+        localStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+
+        // 清除初始状态
+        setInitialState({});
+
+        message.success('已退出登录');
+
+        // 跳转到登录页
+        history.push('/login');
+      },
+    });
+  };
 
   // 菜单数据 - 电商后台
   const menuData = {
     dashboard: [
       { key: '/dashboard', label: '数据统计', icon: <LineChartOutlined /> },
     ],
-    product: [
-      { key: '/product/list', label: '商品管理', icon: <ShoppingOutlined /> },
-      { key: '/product/category', label: '分类管理', icon: <ShoppingOutlined /> },
-      { key: '/product/brand', label: '品牌管理', icon: <ShoppingOutlined /> },
-      { key: '/product/spec', label: '规格管理', icon: <ShoppingOutlined /> },
-    ],
-    order: [
-      { key: '/order/list', label: '订单列表', icon: <FileTextOutlined /> },
-      { key: '/order/after-sale', label: '售后管理', icon: <FileTextOutlined /> },
+    enjoy: [
+      { key: '/enjoy/activities', label: '活动管理', icon: <GiftOutlined /> },
     ],
     user: [
-      { key: '/user/list', label: '用户列表', icon: <TeamOutlined /> },
-      { key: '/user/level', label: '会员等级', icon: <TeamOutlined /> },
-    ],
-    marketing: [
-      { key: '/marketing/coupon', label: '优惠券', icon: <GiftOutlined /> },
-      { key: '/marketing/activity', label: '活动管理', icon: <GiftOutlined /> },
-    ],
-    system: [
-      { key: '/system/user', label: '用户管理', icon: <ControlOutlined /> },
-      { key: '/system/role', label: '角色管理', icon: <ControlOutlined /> },
-      { key: '/system/menu', label: '菜单管理', icon: <ControlOutlined /> },
+      { key: '/user/adminUser', label: '管理端用户', icon: <TeamOutlined /> },
+      { key: '/user/wqUser', label: '小程序用户', icon: <TeamOutlined /> },
     ],
   };
 
   // 顶部主菜单配置
   const mainMenus = [
     { key: 'dashboard', label: '数据统计', icon: <LineChartOutlined /> },
-    { key: 'product', label: '商品中心', icon: <ShoppingOutlined /> },
-    { key: 'order', label: '订单中心', icon: <FileTextOutlined /> },
+    { key: 'enjoy', label: '娱乐中心', icon: <GiftOutlined /> },
     { key: 'user', label: '用户中心', icon: <TeamOutlined /> },
-    { key: 'marketing', label: '营销中心', icon: <GiftOutlined /> },
-    { key: 'system', label: '系统管理', icon: <ControlOutlined /> },
   ];
 
   // 根据当前路径确定激活的菜单
@@ -279,6 +286,7 @@ const CustomLayout = () => {
             icon={<LogoutOutlined />}
             style={{ color: '#ffffff', fontSize: '26px' }}
             title="退出"
+            onClick={handleLogout}
           />
         </div>
       </Header>
@@ -316,7 +324,9 @@ const CustomLayout = () => {
                 minHeight: '100%',
               }}
             >
-              <Outlet />
+              <ErrorBoundary>
+                <Outlet />
+              </ErrorBoundary>
             </div>
           </Content>
         </Layout>
