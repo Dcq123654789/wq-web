@@ -134,8 +134,6 @@ export function fieldNameToTitle(fieldName: string): string {
     // 时间字段
     createTime: '创建时间',
     updateTime: '更新时间',
-    createTime: '创建时间',
-    updateTime: '更新时间',
     birthDate: '出生日期',
 
     // 用户字段
@@ -256,8 +254,42 @@ export function convertEntityFieldsToColumns(
   excludeFields: string[] = [],
   fieldOverrides?: FieldOverrideConfig,
   relations?: { [fieldName: string]: RelationConfig },
+  match?: true | { [fieldName: string]: string }, // ⭐ match：控制显示哪些查询条件
 ): ProColumns[] {
   const columns: ProColumns[] = [];
+
+  // ⭐ 判断哪些字段应该在查询中显示
+  // match: true - 显示所有字段
+  // match: { name: '名称' } - 只显示指定字段
+  // 默认: 只显示前三个字段
+  let searchFields: string[] = [];
+
+  if (match === true) {
+    // 显示所有字段的查询条件
+    searchFields = Object.keys(entityFields);
+  } else if (match && typeof match === 'object') {
+    // 只显示指定字段的查询条件
+    searchFields = Object.keys(match);
+  } else {
+    // 默认只显示前三个字段（排除已经隐藏的字段）
+    let count = 0;
+    Object.entries(entityFields).forEach(([fieldName, fieldInfo]) => {
+      // 排除复杂对象类型
+      const fullTypeName = fieldInfo.typeName || fieldInfo.type || '';
+      if (excludeFields.includes(fieldName)) return;
+      if (fieldName === 'serialVersionUID') return;
+      if (isComplexType(fullTypeName)) return;
+      // 排除某些不适合查询的字段
+      if (fieldName === 'password' || fieldName === 'openid' || fieldName === 'avatar') return;
+
+      if (count < 3) {
+        searchFields.push(fieldName);
+        count++;
+      }
+    });
+  }
+
+  console.log('🔍 查询字段配置 (match):', { match, searchFields });
 
   Object.entries(entityFields).forEach(([fieldName, fieldInfo]) => {
     // 排除指定字段
@@ -305,10 +337,31 @@ export function convertEntityFieldsToColumns(
       key: fieldName,
       valueType: mapFieldTypeToValueType(actualTypeName) as any,
       sorter: true,
-      hideInSearch: fieldName === 'password' || fieldName === 'openid',
+      // ⭐ 根据 searchFields 决定是否在查询中显示
+      hideInSearch: !searchFields.includes(fieldName),
       // 为长文本字段设置宽度，避免占用过多空间
       width: getColumnWidth(fieldName, actualTypeName),
     };
+
+    // ⭐ 应用字段覆盖配置（排除表单专用渲染器）
+    if (fieldOverrides && fieldOverrides[fieldName]) {
+      // 创建一个副本，排除表单专用的渲染器
+      const overrides = { ...fieldOverrides[fieldName] };
+      delete overrides.renderFormItem; // 移除表单专用渲染器
+      delete overrides.renderForm;     // 移除另一个可能的表单渲染器属性
+      delete overrides.render;         // 移除 render（表单渲染器）
+      // ⭐ 将 renderTable 映射到 render（ProTable 列的渲染器）
+      if (overrides.renderTable !== undefined) {
+        (column as any).render = overrides.renderTable;
+        delete overrides.renderTable;
+      }
+      // ⭐ 如果字段覆盖中已经设置了 hideInSearch，保持它的优先级
+      if (overrides.hideInSearch === undefined) {
+        delete overrides.hideInSearch;
+      }
+      Object.assign(column, overrides);
+      console.log(`✅ 应用字段覆盖 [${fieldName}]:`, overrides);
+    }
 
     // 头像字段使用图片渲染
     if (fieldName === 'avatar' || fieldName === 'headImg' || fieldName === 'imageUrl') {
@@ -466,6 +519,26 @@ export function convertEntityFieldsToFormFields(
 
     formFields.push(formField);
   });
+
+  // ⭐ 新增：添加 fieldOverrides 中存在但 entityFields 中不存在的字段
+  if (fieldOverrides) {
+    Object.entries(fieldOverrides).forEach(([fieldName, overrideConfig]) => {
+      // 检查该字段是否已经存在于 formFields 中
+      const fieldExists = formFields.some(f => f.name === fieldName);
+
+      // 如果字段不存在，且不在排除列表中，则添加它
+      if (!fieldExists && !excludeFields.includes(fieldName)) {
+        const formField: FormFieldConfig = {
+          name: fieldName,
+          label: overrideConfig.label || fieldNameToTitle(fieldName),
+          ...overrideConfig,
+        };
+
+        console.log('✅ 从 fieldOverrides 添加额外字段:', fieldName, formField);
+        formFields.push(formField);
+      }
+    });
+  }
 
   return formFields;
 }

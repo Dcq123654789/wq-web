@@ -36,7 +36,7 @@ const DynamicForm: React.FC<any> = ({
   }, [mode, initialValues, formFields]);
   // 渲染单个字段
   const renderField = (field: FormFieldConfig) => {
-    const { name, label, valueType = 'text', required, render, fieldProps = {} } = field;
+    const { name, label, valueType = 'text', required, render, renderFormItem, fieldProps = {} } = field;
     const rules = buildValidationRules(field);
     const fieldName = Array.isArray(name) ? name : [name];
 
@@ -48,28 +48,43 @@ const DynamicForm: React.FC<any> = ({
       ...fieldProps,
     };
 
+    // 优先使用 renderFormItem（表单专用），如果没有则使用 render（通用渲染器）
+    const customRender = renderFormItem || render;
+
     // 如果有自定义 render 函数，使用自定义渲染
-    if (render) {
+    if (customRender) {
+      console.log(`🎨 渲染自定义字段 [${fieldName}]`, { label, valueType });
       return (
         <ProForm.Item
           key={fieldName.join('.')}
           label={label}
           rules={rules}
           shouldUpdate={(prevValues, currentValues) => {
-            // 当字段的值发生变化时更新
             return prevValues[fieldName[0]] !== currentValues[fieldName[0]];
           }}
         >
           {(form: any) => {
             const value = form.getFieldValue(fieldName);
-            const onChange = (val: any) => form.setFieldValue(fieldName, val);
-            return render({
-              value,
-              onChange,
-              record: initialValues,
-              mode,
-              form, // ⭐ 传递 form 实例，允许自定义组件设置其他字段的值
-            });
+            const onChange = (val: any) => {
+              console.log(`字段 [${fieldName}] onChange:`, val);
+              form.setFieldValue(fieldName, val);
+            };
+            console.log(`🎨 渲染自定义组件, 字段: [${fieldName}], 当前值:`, value);
+            return (
+              <>
+                {customRender({
+                  value,
+                  onChange,
+                  record: initialValues,
+                  mode,
+                  form,
+                })}
+                {/* ⭐ 隐藏字段：确保表单提交时包含这个字段的值 */}
+                <ProForm.Item name={fieldName} noStyle>
+                  <input type="hidden" />
+                </ProForm.Item>
+              </>
+            );
           }}
         </ProForm.Item>
       );
@@ -191,34 +206,47 @@ const DynamicForm: React.FC<any> = ({
         return <ProFormSlider key={fieldName.join('.')} {...commonProps} />;
 
       case 'image':
-        // 图片字段，如果有 render 函数则使用自定义渲染，否则显示提示
-        if (field.render) {
+        // 图片字段，如果有 renderFormItem 或 render 函数则使用自定义渲染
+        const imageRender = field.renderFormItem || field.render;
+        if (imageRender) {
+          console.log(`🎨 渲染图片字段 [${fieldName}]`, { label });
           return (
             <ProForm.Item
               key={fieldName.join('.')}
               label={label}
               rules={rules}
               shouldUpdate={(prevValues, currentValues) => {
-                // 当字段的值发生变化时更新
                 return prevValues[fieldName[0]] !== currentValues[fieldName[0]];
               }}
             >
               {(form: any) => {
                 const value = form.getFieldValue(fieldName);
-                const onChange = (val: any) => form.setFieldValue(fieldName, val);
-                return field.render!({
-                  value,
-                  onChange,
-                  mode,
-                  form, // 传递 form 实例，允许自定义组件设置其他字段的值
-                });
+                const onChange = (val: any) => {
+                  console.log(`图片字段 [${fieldName}] onChange:`, val);
+                  form.setFieldValue(fieldName, val);
+                };
+                console.log(`🎨 渲染图片组件, 字段: [${fieldName}], 当前值:`, value);
+                return (
+                  <>
+                    {imageRender({
+                      value,
+                      onChange,
+                      mode,
+                      form,
+                    })}
+                    {/* ⭐ 隐藏字段：确保表单提交时包含这个字段的值 */}
+                    <ProForm.Item name={fieldName} noStyle>
+                      <input type="hidden" />
+                    </ProForm.Item>
+                  </>
+                );
               }}
             </ProForm.Item>
           );
         }
         return (
           <ProForm.Item key={fieldName.join('.')} name={fieldName} label={label} rules={rules}>
-            <div>请为图片字段配置 render 函数</div>
+            <div>请为图片字段配置 renderFormItem 函数</div>
           </ProForm.Item>
         );
 
@@ -259,6 +287,7 @@ const DynamicForm: React.FC<any> = ({
       formRef={formRef}
       initialValues={initialValues}
       onFinish={async (values) => {
+        console.log('📋 表单提交的值:', values);
         await onSubmit(values);
       }}
       submitter={{

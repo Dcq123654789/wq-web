@@ -6,7 +6,10 @@
       "Bash(npm run build:*)",
       "Bash(timeout:*)",
       "Bash(pnpm dev:*)",
-      "Bash(ping:*)"
+      "Bash(ping:*)",
+      "Bash(git add:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(dir:*)"
     ]
   }
 }

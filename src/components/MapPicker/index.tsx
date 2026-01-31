@@ -97,8 +97,18 @@ const MapPicker: React.FC<MapPickerProps> = ({
       setSdkReady(true);
       setMapLoading(false);
     };
+  }, []);
 
-    // 预加载地图脚本（可选，提高体验）
+  // ⭐ 同步 value prop 到 location 状态（编辑时加载数据）
+  useEffect(() => {
+    if (value && Object.keys(value).length > 0) {
+      console.log('📍 MapPicker value prop 已改变，更新 location 状态:', value);
+      setLocation(value);
+    }
+  }, [value]);
+
+  // 预加载地图脚本（可选，提高体验）
+  useEffect(() => {
     const preloadMapScript = () => {
       if (!scriptLoadRef.current && !checkSdkReady()) {
         console.log('预加载地图脚本...');

@@ -1,4 +1,5 @@
 import { history } from '@umijs/max';
+import { message } from 'antd';
 import type { InitialState, UserInfo } from './types/auth';
 
 // 注意：这里不能直接 import { request }，因为我们导出了 request 配置
@@ -94,12 +95,16 @@ export async function getInitialState(): Promise<InitialState> {
   }
 }
 
-// 路由守卫
-export function onRouteChange({ location }: { location: { pathname: string } }) {
-  const { pathname } = location;
+// 白名单路由（不需要登录就能访问）
+const WHITE_LIST = ['/login'];
 
-  // 如果是登录页面，不需要检查登录状态
-  if (pathname === '/login') {
+// 渲染函数 - 在组件渲染前执行，用于路由守卫
+export function render(oldRender: () => void) {
+  const { pathname } = window.location;
+
+  // 检查是否在白名单中
+  if (WHITE_LIST.includes(pathname)) {
+    oldRender();
     return;
   }
 
@@ -107,8 +112,14 @@ export function onRouteChange({ location }: { location: { pathname: string } }) 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
     // 未登录，跳转到登录页
+    message.warning('请先登录');
     history.push('/login');
+    oldRender();
+    return;
   }
+
+  // 已登录，正常渲染
+  oldRender();
 }
 
  export const rootContainer = (container: React.ReactNode) => {

@@ -94,6 +94,10 @@ export default defineConfig({
           component: './enjoy/activities',
         },
         {
+          path: '/enjoy/activityregistration',
+          component: './enjoy/activityregistration',
+        },
+        {
           path: '/user/adminUser',
           component: './User/adminUser',
         },
@@ -101,7 +105,10 @@ export default defineConfig({
           path: '/user/wqUser',
           component: './User/wqUser',
         },
-         
+        {
+          path: '/*',
+          component: './404',
+        },
       ],
     },
   ],

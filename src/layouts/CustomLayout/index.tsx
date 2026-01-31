@@ -55,6 +55,7 @@ const CustomLayout = () => {
     ],
     enjoy: [
       { key: '/enjoy/activities', label: '活动管理', icon: <GiftOutlined /> },
+      { key: '/enjoy/activityregistration', label: '报名管理', icon: <FileTextOutlined /> },
     ],
     user: [
       { key: '/user/adminUser', label: '管理端用户', icon: <TeamOutlined /> },

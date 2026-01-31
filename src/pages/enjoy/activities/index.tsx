@@ -1,4 +1,5 @@
 import React from 'react';
+import { Image } from 'antd';
 import { GenericCrud } from '@/components/GenericCrud';
 import FileUpload from '@/components/FileUpload';
 import MapPicker from '@/components/MapPicker';
@@ -23,18 +24,15 @@ export default function ActivitiesPage() {
       // 动态实体配置
       dynamicEntity={{
         // 实体类名（首字母大写）
-        entityClassName: 'CommunityActivity',
-
-        // 实体名称（小写）
-        entityName: 'communityActivity',
-
+        entityClassName: 'CommunityActivity', 
+        // 实体名称（小写） 
+        entityName: 'communityActivity', 
         // 排除的字段（不显示在表格和表单中）
-        excludeFields: [],
-
+        excludeFields: [], 
         // 关联实体配置
         relations: {
-          // community 字段关联到 Community 实体
-          community: {
+          // communityId 字段关联到 Community 实体
+          communityId: {
             entityClassName: 'Community',
             entityName: 'community',
             displayField: 'name', // 显示社区名称
@@ -43,7 +41,7 @@ export default function ActivitiesPage() {
         },
 
         // 字段覆盖配置
-        fieldOverrides: {
+        fieldOverrides: { 
           // 活动标题字段
           title: {
             required: true,
@@ -58,34 +56,120 @@ export default function ActivitiesPage() {
               rows: 4,
             },
           },
-          // 活动图片（单张）
+          // 活动图片（单张封面）
           coverImage: {
+            label: '活动封面',
             valueType: 'image',
-            render: (props: any) => (
-              <FileUpload {...props} uploadType="image" maxCount={8} />
+            // 表格中显示图片
+            renderTable: (_: any, record: any) => {
+              const value = record.coverImage;
+              if (!value) return '-';
+              // 如果是数组，显示第一张
+              if (Array.isArray(value)) {
+                return value.length > 0 ? (
+                  <Image
+                    src={value[0]}
+                    alt="封面"
+                    width={40}
+                    height={40}
+                    style={{ objectFit: 'cover', borderRadius: 4 }}
+                  />
+                ) : '-';
+              }
+              // 如果是字符串，直接显示
+              return (
+                <Image
+                  src={value}
+                  alt="封面"
+                  width={40}
+                  height={40}
+                  style={{ objectFit: 'cover', borderRadius: 4 }}
+                />
+              );
+            },
+            // 表单中使用上传组件
+            renderFormItem: (props: any) => (
+              <FileUpload {...props} uploadType="image" maxCount={3} />
             ),
           },
           // 活动图库（多张）
           images: {
+            label: '活动图库',
             valueType: 'image',
-            render: (props: any) => (
+            // 表格中显示多张图片的缩略图
+            renderTable: (_: any, record: any) => {
+              const value = record.images;
+              if (!value || !Array.isArray(value) || value.length === 0) return '-';
+              // 显示前3张图片作为缩略图
+              const previewImages = value.slice(0, 3).map((img: string, index: number) => (
+                <Image
+                  key={index}
+                  src={img}
+                  alt={`图库${index + 1}`}
+                  width={30}
+                  height={30}
+                  style={{ objectFit: 'cover', borderRadius: 4, marginRight: 4 }}
+                />
+              ));
+              // 如果超过3张，显示数量
+              const count = value.length > 3 ? (
+                <span style={{ marginLeft: 4, color: '#999' }}>+{value.length - 3}</span>
+              ) : null;
+              return <span style={{ display: 'flex', alignItems: 'center' }}>{previewImages}{count}</span>;
+            },
+            // 表单中使用上传组件
+            renderFormItem: (props: any) => (
               <FileUpload {...props} uploadType="image" maxCount={9} />
             ),
           },
           // 活动开始时间
-          startTime: {
+          activityStartTime: {
+            label: '活动开始时间',
             valueType: 'dateTime',
           },
           // 活动结束时间
-          endTime: {
+          activityEndTime: {
+            label: '活动结束时间',
             valueType: 'dateTime',
+          },
+          // 标签（数组类型）
+          tags: {
+            label: '标签',
+            valueType: 'select',
+            fieldProps: {
+              mode: 'tags',
+              placeholder: '请输入标签，按回车添加',
+              options: [], // 空选项，允许自由输入
+            },
+            // normalize: 当值被设置到表单时调用（编辑时，从后端数据转为表单数据）
+            normalize: (value: any) => {
+              console.log('tags normalize (后端→表单):', value);
+              // 如果是字符串，转换为数组
+              if (typeof value === 'string' && value) {
+                return value.split(',').map(t => t.trim()).filter(t => t);
+              }
+              // 如果已经是数组，直接返回
+              return Array.isArray(value) ? value : [];
+            },
           },
           // 活动地点（使用地图选择器）
           locationAddress: {
             label: '活动地点',
             valueType: 'text',
-            required: true,
-            render: (formProps: any) => (
+            // 编辑时：将字符串地址转换为对象传给 MapPicker
+            normalize: (value: any) => {
+              console.log('📍 locationAddress normalize (后端→表单):', value);
+              // 如果是字符串地址，转换为对象格式供 MapPicker 使用
+              if (typeof value === 'string' && value) {
+                return {
+                  address: value,
+                  // 其他字段为空，MapPicker 会重新获取
+                };
+              }
+              return value;
+            },
+            // 表单中使用地图选择器
+            renderFormItem: (formProps: any) => (
               <MapPicker
                 {...formProps}
                 config={{
@@ -96,12 +180,13 @@ export default function ActivitiesPage() {
                 }}
                 placeholder="请点击选择活动地点"
                 modalTitle="选择活动地点"
-                modalWidth={900}  
+                modalWidth={900}
                 onChange={(locationInfo: any) => {
                   console.log('📍 地图选择器 onChange - 位置信息:', locationInfo);
 
-                  // 更新当前字段（locationAddress）
-                  formProps.onChange?.(locationInfo);
+                  // ⭐ 只保存地址字符串，不保存整个对象
+                  const addressValue = locationInfo?.address || locationInfo;
+                  formProps.onChange?.(addressValue);
 
                   // 获取表单实例
                   const form = formProps.form;
@@ -111,54 +196,18 @@ export default function ActivitiesPage() {
                     return;
                   }
 
-                  console.log('✅ 表单实例已获取');
+                  console.log('✅ 表单实例已获取，保存地址:', addressValue);
 
-                  // 同时更新经纬度字段（如果存在）
+                  // 同时更新经纬度字段
                   if (locationInfo) {
-                    // 更新经度字段
                     if (locationInfo.lng !== undefined && locationInfo.lng !== null) {
                       form.setFieldValue('longitude', locationInfo.lng);
                       console.log(`✅ 已设置经度 (longitude): ${locationInfo.lng}`);
-                    } else {
-                      console.warn('⚠️ locationInfo.lng 为空');
                     }
-
-                    // 更新纬度字段
                     if (locationInfo.lat !== undefined && locationInfo.lat !== null) {
                       form.setFieldValue('latitude', locationInfo.lat);
                       console.log(`✅ 已设置纬度 (latitude): ${locationInfo.lat}`);
-                    } else {
-                      console.warn('⚠️ locationInfo.lat 为空');
                     }
-
-                    // 如果需要，也可以更新其他相关字段
-                    if (locationInfo.province) {
-                      form.setFieldValue('province', locationInfo.province);
-                      console.log(`✅ 已设置省份: ${locationInfo.province}`);
-                    }
-                    if (locationInfo.city) {
-                      form.setFieldValue('city', locationInfo.city);
-                      console.log(`✅ 已设置城市: ${locationInfo.city}`);
-                    }
-                    if (locationInfo.district) {
-                      form.setFieldValue('district', locationInfo.district);
-                      console.log(`✅ 已设置区县: ${locationInfo.district}`);
-                    }
-
-                    // 打印当前表单的所有值（用于调试）
-                    setTimeout(() => {
-                      const currentValues = form.getFieldsValue();
-                      console.log('📋 当前表单数据:', {
-                        longitude: currentValues.longitude,
-                        latitude: currentValues.latitude,
-                        locationAddress: currentValues.locationAddress,
-                        province: currentValues.province,
-                        city: currentValues.city,
-                        district: currentValues.district,
-                      });
-                    }, 100);
-                  } else {
-                    console.error('❌ locationInfo 为空，无法设置经纬度');
                   }
                 }}
               />
@@ -212,7 +261,7 @@ export default function ActivitiesPage() {
       // UI 配置
       ui={{
         search: {
-          labelWidth: 80,
+          labelWidth: 120, // 增加标签宽度，让名称完整显示
           span: 6,
         },
         table: {

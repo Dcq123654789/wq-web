@@ -73,6 +73,7 @@ const GenericCrud = <T extends Record<string, any>>({
             dynamicEntity.excludeFields || [],
             dynamicEntity.fieldOverrides,
             dynamicEntity.relations,
+            dynamicEntity.match, // ⭐ 传递 match 配置（控制显示哪些查询条件）
           );
           console.log('Generated columns:', cols);
           console.log('Avatar column:', cols.find((c: any) => c.dataIndex === 'avatar'));
@@ -124,6 +125,18 @@ const GenericCrud = <T extends Record<string, any>>({
 
           // 转换查询条件：字符串字段使用模糊查询
           const conditions: Record<string, any> = {};
+
+          // ⭐ 先应用 filter（固定查询条件）
+          if (dynamicEntity.filter) {
+            Object.entries(dynamicEntity.filter).forEach(([key, value]) => {
+              if (value !== undefined && value !== null && value !== '') {
+                conditions[key] = value;
+                console.log(`🔒 固定查询条件 [${key}]:`, value);
+              }
+            });
+          }
+
+          // 再应用用户输入的查询条件
           Object.entries(rest).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
               // 检查字段类型
@@ -146,6 +159,8 @@ const GenericCrud = <T extends Record<string, any>>({
               }
             }
           });
+
+          console.log('📋 最终查询条件:', conditions);
 
           return queryEntity<T>(dynamicEntity.entityName, {
             current,
@@ -355,19 +370,70 @@ const GenericCrud = <T extends Record<string, any>>({
       try {
         setLoading(true);
 
+        // ⭐ 数据类型转换：根据后端字段类型转换前端数据
+        const convertValue = (fieldName: string, value: any): any => {
+          if (value === null || value === undefined || value === '') return value;
+
+          const fieldInfo = entityFields[fieldName];
+          if (!fieldInfo) return value;
+
+          const typeName = fieldInfo.typeName || fieldInfo.type || '';
+
+          // 转换为整数类型
+          if (typeName.includes('Integer') || typeName.includes('int')) {
+            const num = parseInt(value, 10);
+            console.log(`转换字段 [${fieldName}] 为整数: ${value} → ${num}`);
+            return isNaN(num) ? value : num;
+          }
+
+          // 转换为浮点数类型（包括 BigDecimal）
+          if (typeName.includes('Double') || typeName.includes('Float') || typeName.includes('Long')) {
+            const num = parseFloat(value);
+            console.log(`转换字段 [${fieldName}] 为浮点数: ${value} → ${num}`);
+            return isNaN(num) ? value : num;
+          }
+
+          // ⭐ BigDecimal 转换为字符串格式（如 "12.0"）
+          if (typeName.includes('BigDecimal')) {
+            const num = parseFloat(value);
+            if (isNaN(num)) {
+              console.log(`转换字段 [${fieldName}] BigDecimal无效，保持原值: ${value}`);
+              return value;
+            }
+            // 转换为字符串，整数格式化为 "12.0"，小数保持原样
+            const result = num % 1 === 0 ? num.toFixed(1) : String(num);
+            console.log(`转换字段 [${fieldName}] 为BigDecimal字符串: ${value} → "${result}"`);
+            return result;
+          }
+
+          return value;
+        };
+
+        // 转换所有字段值
+        const convertedData: any = {};
+        Object.entries(values).forEach(([key, value]) => {
+          convertedData[key] = convertValue(key, value);
+        });
+
+        console.log('🔄 数据类型转换:', {
+          原始数据: values,
+          转换后数据: convertedData,
+        });
+
         // ⭐ 如果配置了 dataField，将所有值包装到该字段中
-        let submitData = values;
+        let submitData = convertedData;
         if (dynamicEntity?.dataField) {
           submitData = {
-            [dynamicEntity.dataField]: values,
+            [dynamicEntity.dataField]: convertedData,
           };
           console.log('创建数据包装:', {
-            原始数据: values,
+            原始数据: convertedData,
             提交数据: submitData,
             包装字段: dynamicEntity.dataField,
           });
         }
 
+        console.log('📤 最终提交的数据:', submitData);
         await finalCrudOperations.create(submitData);
         setCreateModalVisible(false);
         actionRef?.reload();
@@ -385,7 +451,7 @@ const GenericCrud = <T extends Record<string, any>>({
         setLoading(false);
       }
     },
-    [finalCrudOperations, actionRef, callbacks, dynamicEntity],
+    [finalCrudOperations, actionRef, callbacks, dynamicEntity, entityFields],
   );
 
   // 编辑提交
@@ -397,19 +463,70 @@ const GenericCrud = <T extends Record<string, any>>({
       try {
         setLoading(true);
 
+        // ⭐ 数据类型转换：根据后端字段类型转换前端数据
+        const convertValue = (fieldName: string, value: any): any => {
+          if (value === null || value === undefined || value === '') return value;
+
+          const fieldInfo = entityFields[fieldName];
+          if (!fieldInfo) return value;
+
+          const typeName = fieldInfo.typeName || fieldInfo.type || '';
+
+          // 转换为整数类型
+          if (typeName.includes('Integer') || typeName.includes('int')) {
+            const num = parseInt(value, 10);
+            console.log(`转换字段 [${fieldName}] 为整数: ${value} → ${num}`);
+            return isNaN(num) ? value : num;
+          }
+
+          // 转换为浮点数类型（包括 BigDecimal）
+          if (typeName.includes('Double') || typeName.includes('Float') || typeName.includes('Long')) {
+            const num = parseFloat(value);
+            console.log(`转换字段 [${fieldName}] 为浮点数: ${value} → ${num}`);
+            return isNaN(num) ? value : num;
+          }
+
+          // ⭐ BigDecimal 转换为字符串格式（如 "12.0"）
+          if (typeName.includes('BigDecimal')) {
+            const num = parseFloat(value);
+            if (isNaN(num)) {
+              console.log(`转换字段 [${fieldName}] BigDecimal无效，保持原值: ${value}`);
+              return value;
+            }
+            // 转换为字符串，整数格式化为 "12.0"，小数保持原样
+            const result = num % 1 === 0 ? num.toFixed(1) : String(num);
+            console.log(`转换字段 [${fieldName}] 为BigDecimal字符串: ${value} → "${result}"`);
+            return result;
+          }
+
+          return value;
+        };
+
+        // 转换所有字段值
+        const convertedData: any = {};
+        Object.entries(values).forEach(([key, value]) => {
+          convertedData[key] = convertValue(key, value);
+        });
+
+        console.log('🔄 数据类型转换:', {
+          原始数据: values,
+          转换后数据: convertedData,
+        });
+
         // ⭐ 如果配置了 dataField，将所有值包装到该字段中
-        let submitData = values;
+        let submitData = convertedData;
         if (dynamicEntity?.dataField) {
           submitData = {
-            [dynamicEntity.dataField]: values,
+            [dynamicEntity.dataField]: convertedData,
           };
           console.log('更新数据包装:', {
-            原始数据: values,
+            原始数据: convertedData,
             提交数据: submitData,
             包装字段: dynamicEntity.dataField,
           });
         }
 
+        console.log('📤 最终提交的数据:', submitData);
         await finalCrudOperations.update(currentRecord[rowKey], submitData);
         setUpdateModalVisible(false);
         setCurrentRecord(null);
@@ -428,7 +545,7 @@ const GenericCrud = <T extends Record<string, any>>({
         setLoading(false);
       }
     },
-    [currentRecord, rowKey, finalCrudOperations, actionRef, callbacks, dynamicEntity],
+    [currentRecord, rowKey, finalCrudOperations, actionRef, callbacks, dynamicEntity, entityFields],
   );
 
   // 构建操作列

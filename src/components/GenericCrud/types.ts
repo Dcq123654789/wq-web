@@ -36,7 +36,12 @@ export interface FormFieldConfig {
   valueType?: string;
   required?: boolean;
   rules?: any[];
+  // renderFormItem - 仅用于表单字段的渲染器
+  renderFormItem?: (props: FormFieldRenderProps) => ReactNode;
+  // render - 向后兼容，表单字段渲染器（优先级低于 renderFormItem）
   render?: (props: FormFieldRenderProps) => ReactNode;
+  // renderTable - 表格列渲染器（与 ProTable 的 render 类型相同）
+  renderTable?: (text: any, record: any, index: number) => ReactNode;
   [key: string]: any;
 }
 
@@ -183,6 +188,17 @@ export interface DynamicEntityConfig {
   relations?: {
     [fieldName: string]: RelationConfig;
   };
+
+  // ⭐ 查询字段配置（match：控制显示哪些查询条件）
+  // 1. 简写格式：match: { name: '名称', phone: '手机号' } - 表示只显示这些字段的查询条件
+  // 2. 不设置或为空：默认只显示前三个字段的查询条件
+  // 3. 特殊值：match: true - 显示所有字段的查询条件
+  match?: true | { [fieldName: string]: string };
+
+  // ⭐ 固定查询条件（filter：给列表加固定的过滤条件）
+  // 例如：filter: { status: 1 } - 只查询状态为 1 的数据
+  // 例如：filter: { communityId: 'xxx' } - 只查询该社区的数据
+  filter?: Record<string, any>;
 
   // ⭐ 新增：数据包装字段（所有表单字段包装到该属性中）
   // 例如：dataField = "data"，提交时变为 { data: { name: "张三", age: 25 } }
