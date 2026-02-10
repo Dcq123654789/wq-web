@@ -403,6 +403,16 @@ export function convertEntityFieldsToColumns(
 
       column.valueType = 'text';
 
+      // ⭐ 保存关联字段配置到 column 对象（关键修复！）
+      (column as any).isRelation = true;
+      (column as any).relationConfig = relationConfig;
+      (column as any).requestAsync = true;
+
+      console.log(`🔗 [convertEntityFieldsToColumns] 关联字段 [${fieldName}] 配置:`, {
+        isRelation: true,
+        relationConfig,
+      });
+
       // 自定义渲染：显示关联对象的名称
       (column as any).render = (_: any, record: any) => {
         const relationValue = record[fieldName];
@@ -438,9 +448,27 @@ export function convertEntityFieldsToFormFields(
 ): FormFieldConfig[] {
   const formFields: FormFieldConfig[] = [];
 
+  console.log('🔗 [convertEntityFieldsToFormFields] 开始处理表单字段');
+  console.log('🔋 所有后端字段:', Object.keys(entityFields));
+  console.log('📋 excludeFields:', excludeFields);
+  console.log('🔗 relations 配置:', relations);
+
   Object.entries(entityFields).forEach(([fieldName, fieldInfo]) => {
+    // 🔍 调试：特别是 communityId 字段
+    if (fieldName === 'communityId' || fieldName.includes('Id')) {
+      console.log(`🔍 检查字段 [${fieldName}]:`, {
+        fieldInfo,
+        inExcludeFields: excludeFields.includes(fieldName),
+        fullTypeName: fieldInfo.typeName || fieldInfo.type || '',
+        isComplexType: isComplexType(fieldInfo.typeName || fieldInfo.type || ''),
+        isRelation: relations && relations[fieldName],
+        relationConfig: relations?.[fieldName],
+      });
+    }
+
     // 排除指定字段
     if (excludeFields.includes(fieldName)) {
+      console.log(`❌ 字段 [${fieldName}] 被排除（在 excludeFields 中）`);
       return;
     }
 
@@ -450,8 +478,16 @@ export function convertEntityFieldsToFormFields(
     // 检查是否是关联字段
     const isRelation = relations && relations[fieldName];
 
+    console.log(`🔍 字段 [${fieldName}] 检查:`, {
+      fullTypeName,
+      isRelation: !!isRelation,
+      relationsKeys: relations ? Object.keys(relations) : 'no relations',
+      hasThisFieldInRelations: !!(relations && relations[fieldName]),
+    });
+
     // 如果是复杂类型但不是关联字段，则排除
     if (!isRelation && isComplexType(fullTypeName)) {
+      console.log(`❌ 字段 [${fieldName}] 被排除（复杂类型且不是关联字段）`);
       return;
     }
 
@@ -510,11 +546,25 @@ export function convertEntityFieldsToFormFields(
 
       // 标记为异步选择器，需要动态加载选项
       (formField as any).requestAsync = true;
+
+      console.log(`✅ 关联字段 [${fieldName}] 已配置:`, {
+        valueType: formField.valueType,
+        isRelation: (formField as any).isRelation,
+        relationConfig: (formField as any).relationConfig,
+      });
     }
 
     // 应用字段覆盖配置
     if (fieldOverrides && fieldOverrides[fieldName]) {
       Object.assign(formField, fieldOverrides[fieldName]);
+      if (fieldName === 'communityId') {
+        console.log(`⚠️ 关联字段 [${fieldName}] 被 fieldOverrides 覆盖:`, fieldOverrides[fieldName]);
+      }
+    }
+
+    // 🔍 添加 communityId 到 formFields 的调试
+    if (fieldName === 'communityId') {
+      console.log(`📝 添加字段 [${fieldName}] 到 formFields:`, formField);
     }
 
     formFields.push(formField);

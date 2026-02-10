@@ -46,6 +46,25 @@ export function extractFormFieldsFromColumns<T = any>(
       field.fieldProps = column.fieldProps;
     }
 
+    // ⭐ 复制关联字段配置（关键修复！）
+    if ((column as any).isRelation) {
+      (field as any).isRelation = (column as any).isRelation;
+      // ⭐ 关联字段在表单中需要用 select 类型
+      field.valueType = 'select';
+    }
+    if ((column as any).relationConfig) {
+      (field as any).relationConfig = (column as any).relationConfig;
+    }
+    if ((column as any).requestAsync) {
+      (field as any).requestAsync = (column as any).requestAsync;
+    }
+
+    console.log(`📋 [extractFormFieldsFromColumns] 提取字段 [${field.name}]:`, {
+      valueType: field.valueType,
+      isRelation: (field as any).isRelation,
+      hasRelationConfig: !!(field as any).relationConfig,
+    });
+
     formFields.push(field);
   });
 

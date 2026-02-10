@@ -45,22 +45,39 @@ export default function WqUserPage() {
             ],
           },
 
-          // 性别字段（显示为下拉选择）
-          gender: {
-            label: '性别',
-            valueType: 'select',
-            valueEnum: {
-              1: { text: '男' },
-              2: { text: '女' },
-              0: { text: '未知' },
-            },
-          },
-
           // 头像字段（显示为图片）
           avatar: {
             label: '头像',
             valueType: 'image',
             width: 80,
+          },
+
+          // 真实姓名
+          realName: {
+            label: '真实姓名',
+            valueType: 'text',
+            rules: [
+              { max: 50, message: '真实姓名最多50个字符' },
+            ],
+          },
+
+          // 性别字段（显示为下拉选择）
+          gender: {
+            label: '性别',
+            valueType: 'select',
+            valueEnum: {
+              1: { text: '男', status: 'Success' },
+              2: { text: '女', status: 'Processing' },
+              0: { text: '未知', status: 'Default' },
+            },
+            initialValue: 0,
+          },
+
+          // 出生日期
+          birthDate: {
+            label: '出生日期',
+            valueType: 'date',
+            hideInSearch: true,
           },
 
           // 手机号
@@ -75,21 +92,88 @@ export default function WqUserPage() {
             ],
           },
 
+          // 省份
+          province: {
+            label: '省份',
+            valueType: 'text',
+            hideInSearch: true,
+            rules: [
+              { max: 50, message: '省份最多50个字符' },
+            ],
+          },
+
+          // 城市
+          city: {
+            label: '城市',
+            valueType: 'text',
+            hideInSearch: true,
+            rules: [
+              { max: 50, message: '城市最多50个字符' },
+            ],
+          },
+
+          // 区/县
+          district: {
+            label: '区/县',
+            valueType: 'text',
+            hideInSearch: true,
+            hideInTable: true, // 表格中不显示，太占空间
+            rules: [
+              { max: 50, message: '区/县最多50个字符' },
+            ],
+          },
+
+          // 详细地址
+          detailAddress: {
+            label: '详细地址',
+            valueType: 'textarea',
+            hideInSearch: true,
+            hideInTable: true, // 表格中不显示，太占空间
+            rules: [
+              { max: 255, message: '详细地址最多255个字符' },
+            ],
+          },
+
+          // 所属社区ID
+          communityId: {
+            label: '社区ID',
+            valueType: 'text',
+            hideInTable: true, // 表格中只显示社区名称
+            rules: [
+              { max: 64, message: '社区ID最多64个字符' },
+            ],
+          },
+
           // 所属社区名称
           communityName: {
             label: '所属社区',
             valueType: 'text',
           },
 
-          // 状态字段（如果有的话）
-          status: {
-            label: '状态',
-            valueType: 'select',
-            valueEnum: {
-              0: { text: '禁用', status: 'Error' },
-              1: { text: '正常', status: 'Success' },
-            },
-            initialValue: 1,
+          // 用户收货地址（关联关系）
+          addresses: {
+            label: '收货地址',
+            hideInTable: true,
+            hideInSearch: true,
+            hideInForm: true, // 不在主表单中显示
+          },
+
+          // 创建时间
+          createTime: {
+            label: '注册时间',
+            valueType: 'dateTime',
+            hideInForm: true,
+            hideInSearch: true,
+            sorter: true,
+          },
+
+          // 更新时间
+          updateTime: {
+            label: '更新时间',
+            valueType: 'dateTime',
+            hideInForm: true,
+            hideInSearch: true,
+            sorter: true,
           },
         },
       }}
@@ -128,6 +212,11 @@ export default function WqUserPage() {
           title: '编辑微信用户',
           width: 700,
         },
+      }}
+
+      // 表单默认值
+      data={{
+        gender: 0, // 默认性别为未知
       }}
 
       // 回调函数

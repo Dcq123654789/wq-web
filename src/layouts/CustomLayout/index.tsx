@@ -9,6 +9,13 @@ import {
   LineChartOutlined,
   TeamOutlined,
   ControlOutlined,
+  ApartmentOutlined,
+  EnvironmentOutlined,
+  CustomerServiceOutlined,
+  UserSwitchOutlined,
+  TransactionOutlined,
+  StarOutlined,
+  TagOutlined,
 } from '@ant-design/icons';
 import { Breadcrumb, Button, Layout, Menu, Modal, message, theme } from 'antd';
 import React, { useState, useEffect } from 'react';
@@ -36,7 +43,7 @@ const CustomLayout = () => {
         // 清除本地存储
         localStorage.removeItem('token');
         localStorage.removeItem('userInfo');
-
+        localStorage.removeItem('accessToken');
         // 清除初始状态
         setInitialState({});
 
@@ -60,6 +67,20 @@ const CustomLayout = () => {
     user: [
       { key: '/user/adminUser', label: '管理端用户', icon: <TeamOutlined /> },
       { key: '/user/wqUser', label: '小程序用户', icon: <TeamOutlined /> },
+      { key: '/user/community', label: '社区管理', icon: <ApartmentOutlined /> },
+      { key: '/user/userAddress', label: '收货地址', icon: <EnvironmentOutlined /> },
+    ],
+    mall: [
+      { key: '/mall/product', label: '商品管理', icon: <ShoppingOutlined /> },
+      { key: '/mall/order', label: '订单管理', icon: <FileTextOutlined /> },
+      { key: '/mall/orderItem', label: '订单明细', icon: <FileTextOutlined /> },
+    ],
+    service: [
+      { key: '/service', label: '服务管理', icon: <CustomerServiceOutlined /> },
+      { key: '/service/provider', label: '服务人员', icon: <UserSwitchOutlined /> },
+      { key: '/service/order', label: '服务订单', icon: <TransactionOutlined /> },
+      { key: '/service/review', label: '服务评价', icon: <StarOutlined /> },
+      { key: '/service/coupon', label: '服务优惠券', icon: <TagOutlined /> },
     ],
   };
 
@@ -68,6 +89,8 @@ const CustomLayout = () => {
     { key: 'dashboard', label: '数据统计', icon: <LineChartOutlined /> },
     { key: 'enjoy', label: '娱乐中心', icon: <GiftOutlined /> },
     { key: 'user', label: '用户中心', icon: <TeamOutlined /> },
+    { key: 'mall', label: '商城管理', icon: <ShoppingOutlined /> },
+    { key: 'service', label: '服务管理', icon: <CustomerServiceOutlined /> },
   ];
 
   // 根据当前路径确定激活的菜单

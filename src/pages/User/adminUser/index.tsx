@@ -1,6 +1,7 @@
 import React from 'react';
 import { GenericCrud } from '@/components/GenericCrud';
-
+import { Image } from 'antd';
+import FileUpload from '@/components/FileUpload';
 /**
  * 管理员用户管理页面
  *
@@ -61,8 +62,37 @@ export default function AdminUserPage() {
           // 头像字段（显示为图片）
           avatar: {
             label: '头像',
-            valueType: 'image',
-            width: 80,
+            valueType: 'image', 
+            renderTable: (_: any, record: any) => {
+              const value = record.coverImage;
+              if (!value) return '-';
+              // 如果是数组，显示第一张
+              if (Array.isArray(value)) {
+                return value.length > 0 ? (
+                  <Image
+                    src={value[0]}
+                    alt="封面"
+                    width={40}
+                    height={40}
+                    style={{ objectFit: 'cover', borderRadius: 4 }}
+                  />
+                ) : '-';
+              }
+              // 如果是字符串，直接显示
+              return (
+                <Image
+                  src={value}
+                  alt="封面"
+                  width={40}  
+                  height={40}
+                  style={{ objectFit: 'cover', borderRadius: 4 }}
+                />
+              );
+            },
+            // 表单中使用上传组件
+            renderFormItem: (props: any) => (
+              <FileUpload {...props} uploadType="image" maxCount={1} />
+            ),
           },
 
           // 手机号

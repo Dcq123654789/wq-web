@@ -39,7 +39,7 @@ export default function ActivitiesPage() {
             valueField: '_id',    // 使用 _id 作为值
           },
         },
-
+        
         // 字段覆盖配置
         fieldOverrides: { 
           // 活动标题字段
@@ -156,16 +156,25 @@ export default function ActivitiesPage() {
           locationAddress: {
             label: '活动地点',
             valueType: 'text',
-            // 编辑时：将字符串地址转换为对象传给 MapPicker
-            normalize: (value: any) => {
+            // 编辑时：将后端数据转换为对象传给 MapPicker
+            normalize: (value: any, record: any) => {
               console.log('📍 locationAddress normalize (后端→表单):', value);
-              // 如果是字符串地址，转换为对象格式供 MapPicker 使用
+              console.log('📍 完整的 record 数据:', record);
+
+              // 如果 value 已经是对象（包含 lng/lat），直接返回
+              if (value && typeof value === 'object' && (value.lng || value.lat)) {
+                return value;
+              }
+
+              // 如果是字符串地址，需要结合经纬度字段重建对象
               if (typeof value === 'string' && value) {
                 return {
                   address: value,
-                  // 其他字段为空，MapPicker 会重新获取
+                  lng: record?.longitude,
+                  lat: record?.latitude,
                 };
               }
+
               return value;
             },
             // 表单中使用地图选择器
@@ -184,10 +193,6 @@ export default function ActivitiesPage() {
                 onChange={(locationInfo: any) => {
                   console.log('📍 地图选择器 onChange - 位置信息:', locationInfo);
 
-                  // ⭐ 只保存地址字符串，不保存整个对象
-                  const addressValue = locationInfo?.address || locationInfo;
-                  formProps.onChange?.(addressValue);
-
                   // 获取表单实例
                   const form = formProps.form;
 
@@ -196,9 +201,13 @@ export default function ActivitiesPage() {
                     return;
                   }
 
-                  console.log('✅ 表单实例已获取，保存地址:', addressValue);
+                  // ⭐ 关键修复：保存完整的 LocationInfo 对象（包含 address）
+                  // 这样 normalize 函数可以正确读取 address 字段
+                  formProps.onChange?.(locationInfo);
 
-                  // 同时更新经纬度字段
+                  console.log('✅ 表单实例已获取，保存完整位置信息:', locationInfo);
+
+                  // 同时更新经纬度字段（保持原有逻辑）
                   if (locationInfo) {
                     if (locationInfo.lng !== undefined && locationInfo.lng !== null) {
                       form.setFieldValue('longitude', locationInfo.lng);

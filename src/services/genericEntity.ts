@@ -182,6 +182,45 @@ export async function updateEntity(
 }
 
 /**
+ * 查询单个实体记录详情
+ * @param entity 实体名称（小写，如：wquser）
+ * @param id 记录ID
+ */
+export async function getEntityById<T = any>(
+  entity: string,
+  id: string,
+): Promise<T | null> {
+  try {
+    const response = await request<BatchResponse<T>>(`/api/batch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: {
+        entity,
+        action: 'query',
+        conditions: { _id: id },
+        pageNum: 1,
+        pageSize: 1,
+      },
+    });
+
+    if (response.code === 200 && response.data) {
+      // 处理返回的数据格式（可能是数组或对象）
+      const data = response.data as any;
+      if (Array.isArray(data.content) && data.content.length > 0) {
+        return data.content[0];
+      }
+      return data as T;
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to get entity by id:', error);
+    return null;
+  }
+}
+
+/**
  * 删除实体记录
  * @param entity 实体名称（小写，如：wquser）
  * @param id 记录ID或ID数组

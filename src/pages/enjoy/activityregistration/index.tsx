@@ -1,5 +1,6 @@
 import React from 'react';
 import { GenericCrud } from '@/components/GenericCrud';
+import RelationSelect from '@/components/GenericCrud/components/RelationSelect';
 
 /**
  * 活动报名管理页面
@@ -39,31 +40,66 @@ export default function ActivityRegistrationPage() {
             valueField: '_id',     // 使用 _id 作为值
           },
           // userId 字段关联到 WqUser 实体
-          userId: {
-            entityClassName: 'WqUser',
-            entityName: 'wquser',
-            displayField: 'nickname', // 显示用户昵称
-            valueField: '_id',        // 使用 _id 作为值
-          },
+          // userId: {
+          //   entityClassName: 'WqUser',
+          //   entityName: 'wquser',
+          //   displayField: 'nickname', // 显示用户昵称
+          //   valueField: '_id',        // 使用 _id 作为值
+          // },
         },
 
         // 字段覆盖配置
         fieldOverrides: {
-          // 报名状态
-          status: {
-            label: '报名状态',
-            valueType: 'select',
-            valueEnum: {
-              0: { text: '待审核', status: 'Default' },
-              1: { text: '已通过', status: 'Success' },
-              2: { text: '已拒绝', status: 'Error' },
-              3: { text: '已取消', status: 'Warning' },
-            },
+          // 用户ID - 添加联动功能
+          userId: {
+            label: '用户',
             required: true,
+            renderFormItem: ({ value, onChange, form, mode }: any) => {
+              const relationConfig = {
+                entityClassName: 'WqUser',
+                entityName: 'wquser',
+                displayField: 'nickname', // 显示用户昵称 
+              };
+
+              return (
+                <RelationSelect
+                  value={value}
+                  relationConfig={relationConfig}
+                  mode={mode}
+                  onChange={(selectedValue: string, userRecord: any) => {
+                    // 调用原始onChange
+                    onChange?.(selectedValue);
+                    
+                    // 当选择用户时，自动填充姓名和联系电话
+                    if (userRecord) { 
+                      // 自动填充姓名字段（根据WqUser实体的字段名调整）
+                      if (userRecord.nickname) {
+                        form.setFieldValue('userName', userRecord.nickname);
+                      }  
+
+                      // 自动填充联系电话字段
+                      if (userRecord.phone) {
+                        form.setFieldValue('userPhone', userRecord.phone);
+                      }  
+                    }
+                  }}
+                />
+              );
+            },
+          },
+
+          // 姓名
+          userName: {
+            label: '姓名',
+            valueType: 'text',
+            required: true,
+            fieldProps: {
+              placeholder: '请输入姓名',
+            },
           },
 
           // 联系电话
-          contactPhone: {
+          userPhone: {
             label: '联系电话',
             valueType: 'text',
             required: true,
@@ -88,43 +124,7 @@ export default function ActivityRegistrationPage() {
             },
           },
 
-          // 报名时间（只读）
-          registrationTime: {
-            label: '报名时间',
-            valueType: 'dateTime',
-            hideInForm: true, // 在表单中隐藏
-            hideInSearch: true, // 在搜索中隐藏
-          },
-
-          // 创建时间（只读）
-          createTime: {
-            label: '创建时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 更新时间（只读）
-          updateTime: {
-            label: '更新时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 活动ID - 在表格中显示活动标题
-          activityId: {
-            label: '活动名称',
-            hideInForm: false, // 在表单中显示（下拉选择）
-            hideInSearch: true, // 在搜索中隐藏（关联字段不适合搜索）
-          },
-
-          // 用户ID - 在表格中显示用户昵称
-          userId: {
-            label: '报名用户',
-            hideInForm: false, // 在表单中显示（下拉选择）
-            hideInSearch: true, // 在搜索中隐藏
-          },
+      
         },
       }}
 

@@ -9,7 +9,19 @@
       "Bash(ping:*)",
       "Bash(git add:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "WebSearch",
+      "Bash(if:*)",
+      "Bash(then mkdir docs)",
+      "Bash(fi:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm list:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm install:*)",
+      "Bash(powershell:*)"
     ]
   }
 }

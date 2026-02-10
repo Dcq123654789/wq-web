@@ -297,7 +297,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       // 创建地图实例
       const map = new AMap.Map('map-container', {
         zoom: defaultZoom,
-        center: (location.lng && location.lat) ? [location.lng, location.lat] : defaultCenter,
+        center: (location?.lng && location?.lat) ? [location.lng, location.lat] : defaultCenter,
         viewMode: '2D',
       });
 
@@ -320,7 +320,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       });
 
       // 如果有位置，添加标记
-      if (location.lng && location.lat) {
+      if (location?.lng && location?.lat) {
         addMarker([location.lng, location.lat], map);
       }
 
@@ -359,8 +359,8 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
     try {
       const point = new BMap.Point(
-        location.lng || defaultCenter[0],
-        location.lat || defaultCenter[1]
+        location?.lng || defaultCenter[0],
+        location?.lat || defaultCenter[1]
       );
 
       const map = new BMap.Map('map-container');
@@ -378,7 +378,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       });
 
       // 如果有位置，添加标记
-      if (location.lng && location.lat) {
+      if (location?.lng && location?.lat) {
         addBMapMarker(location.lng, location.lat, map);
       }
 
@@ -566,7 +566,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
     <div>
       <Space.Compact style={{ width: '100%' }}>
         <Input
-          value={location.address || (location.lng && location.lat ? `${location.lng.toFixed(6)}, ${location.lat.toFixed(6)}` : '')}
+          value={location?.address || (location?.lng && location?.lat ? `${location.lng.toFixed(6)}, ${location.lat.toFixed(6)}` : '')}
           placeholder={placeholder}
           readOnly
           disabled={disabled}
@@ -581,7 +581,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
         >
           选点
         </Button>
-        {location.lng && location.lat && (
+        {location?.lng && location?.lat && (
           <Button onClick={handleClear} disabled={disabled}>
             清除
           </Button>
@@ -589,7 +589,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       </Space.Compact>
 
       {/* 显示位置信息标签 */}
-      {location.lng && location.lat && (
+      {location?.lng && location?.lat && (
         <div style={{ marginTop: 8 }}>
           <Space wrap>
             <Tag color="blue" icon={<CheckCircleOutlined />}>
@@ -598,7 +598,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
             <Tag color="green" icon={<CheckCircleOutlined />}>
               纬度: {location.lat?.toFixed(6)}
             </Tag>
-            {location.address && (
+            {location?.address && (
               <Tag color="orange" icon={<CheckCircleOutlined />}>
                 {location.address}
               </Tag>
@@ -710,7 +710,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
                       />
                     </div>
 
-                    {location.lng && location.lat && (
+                    {location?.lng && location?.lat && (
                       <div style={{ padding: '8px', background: '#f0f0f0', borderRadius: 4 }}>
                         <Text type="secondary" style={{ fontSize: 12 }}>
                           已选坐标：{location.lng.toFixed(6)}, {location.lat.toFixed(6)}
@@ -811,7 +811,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
                 <Text>经度：</Text>
                 <Input
                   style={{ width: 150 }}
-                  value={location.lng?.toString() || ''}
+                  value={location?.lng?.toString() || ''}
                   onChange={(e) => handleManualInput('lng', e.target.value)}
                   placeholder="如：116.397428"
                   suffix="°"
@@ -819,7 +819,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
                 <Text>纬度：</Text>
                 <Input
                   style={{ width: 150 }}
-                  value={location.lat?.toString() || ''}
+                  value={location?.lat?.toString() || ''}
                   onChange={(e) => handleManualInput('lat', e.target.value)}
                   placeholder="如：39.90923"
                   suffix="°"
@@ -828,7 +828,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
                   size="small"
                   type="default"
                   onClick={() => {
-                    if (location.lng && location.lat) {
+                    if (location?.lng && location?.lat) {
                       // 逆地理编码获取地址
                       reverseGeocode(location.lng, location.lat);
                     } else {
@@ -840,7 +840,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
                 </Button>
               </Space>
 
-              {location.address && (
+              {location?.address && (
                 <div>
                   <Text>地址：</Text>
                   <Text type="secondary">{location.address}</Text>
@@ -849,9 +849,9 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
               <Space>
                 <Text type="secondary">
-                  {location.province && `${location.province}`}
-                  {location.city && ` - ${location.city}`}
-                  {location.district && ` - ${location.district}`}
+                  {location?.province && `${location.province}`}
+                  {location?.city && ` - ${location.city}`}
+                  {location?.district && ` - ${location.district}`}
                 </Text>
               </Space>
 

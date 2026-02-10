@@ -5,6 +5,15 @@ export default defineConfig({
   access: {},
   model: {},
   initialState: {},
+
+  // MFSU 配置 - 确保 dayjs 正确共享
+  mfsu: {
+    shared: {
+      dayjs: {
+        singleton: true,
+      },
+    },
+  },
   request: {
     timeout: 60000,
     requestInterceptors: [
@@ -106,6 +115,46 @@ export default defineConfig({
           component: './User/wqUser',
         },
         {
+          path: '/user/community',
+          component: './User/communtiy',
+        },
+        {
+          path: '/user/userAddress',
+          component: './User/userAddress',
+        },
+        {
+          path: '/mall/order',
+          component: './mall/order',
+        },
+        {
+          path: '/mall/orderItem',
+          component: './mall/orderItem',
+        },
+        {
+          path: '/mall/product',
+          component: './mall/product',
+        },
+        {
+          path: '/service',
+          component: './service',
+        },
+        {
+          path: '/service/provider',
+          component: './service/provider',
+        },
+        {
+          path: '/service/order',
+          component: './service/order',
+        },
+        {
+          path: '/service/review',
+          component: './service/review',
+        },
+        {
+          path: '/service/coupon',
+          component: './service/coupon',
+        },
+        {
           path: '/*',
           component: './404',
         },
@@ -116,11 +165,11 @@ export default defineConfig({
   // 开发环境代理配置
   proxy: {
     '/api': {
-      target: 'http://localhost:8080',
+      target: 'http://192.168.1.107:8080',
       changeOrigin: true,
       secure: false,
       timeout: 60000, // 60秒超时
-      pathRewrite: { '^/api': '/api' },
+      // 移除 pathRewrite，保持 /api 前缀
     },
   },
 });
