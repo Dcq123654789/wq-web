@@ -75,8 +75,6 @@ const GenericCrud = <T extends Record<string, any>>({
             dynamicEntity.relations,
             dynamicEntity.match, // ⭐ 传递 match 配置（控制显示哪些查询条件）
           );
-          console.log('Generated columns:', cols);
-          console.log('Avatar column:', cols.find((c: any) => c.dataIndex === 'avatar'));
           setGeneratedColumns(cols);
 
           // 生成表单字段配置
@@ -89,7 +87,6 @@ const GenericCrud = <T extends Record<string, any>>({
           setGeneratedFormFields(formFields);
         } catch (error) {
           message.error('获取实体字段信息失败');
-          console.error('Failed to fetch entity fields:', error);
         } finally {
           setFieldsLoading(false);
         }
@@ -131,7 +128,6 @@ const GenericCrud = <T extends Record<string, any>>({
             Object.entries(dynamicEntity.filter).forEach(([key, value]) => {
               if (value !== undefined && value !== null && value !== '') {
                 conditions[key] = value;
-                console.log(`🔒 固定查询条件 [${key}]:`, value);
               }
             });
           }
@@ -159,8 +155,6 @@ const GenericCrud = <T extends Record<string, any>>({
               }
             }
           });
-
-          console.log('📋 最终查询条件:', conditions);
 
           return queryEntity<T>(dynamicEntity.entityName, {
             current,
@@ -222,11 +216,6 @@ const GenericCrud = <T extends Record<string, any>>({
 
       try {
         const result = await finalCrudOperations.list(params, sort);
-        // 调试：打印返回的数据
-        if (result.data && result.data.length > 0) {
-          console.log('List data sample:', result.data[0]);
-          console.log('Avatar field value:', result.data[0]?.avatar);
-        }
         return {
           data: result.data || [],
           success: result.success,
@@ -282,11 +271,15 @@ const GenericCrud = <T extends Record<string, any>>({
 
       try {
         setLoading(true);
-        await finalCrudOperations.delete(id);
-        message.success('删除成功');
-        actionRef?.reload();
-        if (callbacks.onDeleteSuccess) {
-          callbacks.onDeleteSuccess();
+        const success = await finalCrudOperations.delete(id);
+
+        if (success) {
+          actionRef.current?.reload();
+          if (callbacks.onDeleteSuccess) {
+            callbacks.onDeleteSuccess();
+          }
+        } else {
+          message.error('删除失败');
         }
       } catch (error) {
         if (callbacks.onError) {
@@ -323,10 +316,11 @@ const GenericCrud = <T extends Record<string, any>>({
           setLoading(true);
           const ids = selectedRows.map((row) => row[rowKey]);
           await finalCrudOperations.delete(ids);
-          message.success('批量删除成功');
+
+          // 假设没有抛出异常就是成功
           setSelectedRows([]);
           setSelectedRowKeys([]);
-          actionRef?.reload();
+          actionRef.current?.reload();
           if (callbacks.onDeleteSuccess) {
             callbacks.onDeleteSuccess();
           }
@@ -379,17 +373,26 @@ const GenericCrud = <T extends Record<string, any>>({
 
           const typeName = fieldInfo.typeName || fieldInfo.type || '';
 
+          // ⭐ 处理日期时间类型：dayjs 对象转换为字符串
+          if (typeName.includes('DateTime') || typeName.includes('Date') || typeName.includes('Timestamp') || typeName.includes('LocalDateTime')) {
+            // 如果是 dayjs 对象，转换为 ISO 字符串或标准格式
+            if (value && typeof value === 'object' && value.format) {
+              // 返回 YYYY-MM-DD HH:mm:ss 格式
+              return value.format('YYYY-MM-DD HH:mm:ss');
+            }
+            // 如果已经是字符串，直接返回
+            return value;
+          }
+
           // 转换为整数类型
           if (typeName.includes('Integer') || typeName.includes('int')) {
             const num = parseInt(value, 10);
-            console.log(`转换字段 [${fieldName}] 为整数: ${value} → ${num}`);
             return isNaN(num) ? value : num;
           }
 
           // 转换为浮点数类型（包括 BigDecimal）
           if (typeName.includes('Double') || typeName.includes('Float') || typeName.includes('Long')) {
             const num = parseFloat(value);
-            console.log(`转换字段 [${fieldName}] 为浮点数: ${value} → ${num}`);
             return isNaN(num) ? value : num;
           }
 
@@ -397,12 +400,10 @@ const GenericCrud = <T extends Record<string, any>>({
           if (typeName.includes('BigDecimal')) {
             const num = parseFloat(value);
             if (isNaN(num)) {
-              console.log(`转换字段 [${fieldName}] BigDecimal无效，保持原值: ${value}`);
               return value;
             }
             // 转换为字符串，整数格式化为 "12.0"，小数保持原样
             const result = num % 1 === 0 ? num.toFixed(1) : String(num);
-            console.log(`转换字段 [${fieldName}] 为BigDecimal字符串: ${value} → "${result}"`);
             return result;
           }
 
@@ -415,30 +416,25 @@ const GenericCrud = <T extends Record<string, any>>({
           convertedData[key] = convertValue(key, value);
         });
 
-        console.log('🔄 数据类型转换:', {
-          原始数据: values,
-          转换后数据: convertedData,
-        });
-
         // ⭐ 如果配置了 dataField，将所有值包装到该字段中
         let submitData = convertedData;
         if (dynamicEntity?.dataField) {
           submitData = {
             [dynamicEntity.dataField]: convertedData,
           };
-          console.log('创建数据包装:', {
-            原始数据: convertedData,
-            提交数据: submitData,
-            包装字段: dynamicEntity.dataField,
-          });
         }
 
-        console.log('📤 最终提交的数据:', submitData);
-        await finalCrudOperations.create(submitData);
-        setCreateModalVisible(false);
-        actionRef?.reload();
-        if (callbacks.onCreateSuccess) {
-          callbacks.onCreateSuccess();
+        const success = await finalCrudOperations.create(submitData);
+
+        // 只有成功时才关闭弹窗并刷新
+        if (success) {
+          setCreateModalVisible(false);
+          actionRef.current?.reload();
+          if (callbacks.onCreateSuccess) {
+            callbacks.onCreateSuccess();
+          }
+        } else {
+          message.error('创建失败');
         }
       } catch (error) {
         if (callbacks.onError) {
@@ -472,17 +468,26 @@ const GenericCrud = <T extends Record<string, any>>({
 
           const typeName = fieldInfo.typeName || fieldInfo.type || '';
 
+          // ⭐ 处理日期时间类型：dayjs 对象转换为字符串
+          if (typeName.includes('DateTime') || typeName.includes('Date') || typeName.includes('Timestamp') || typeName.includes('LocalDateTime')) {
+            // 如果是 dayjs 对象，转换为 ISO 字符串或标准格式
+            if (value && typeof value === 'object' && value.format) {
+              // 返回 YYYY-MM-DD HH:mm:ss 格式
+              return value.format('YYYY-MM-DD HH:mm:ss');
+            }
+            // 如果已经是字符串，直接返回
+            return value;
+          }
+
           // 转换为整数类型
           if (typeName.includes('Integer') || typeName.includes('int')) {
             const num = parseInt(value, 10);
-            console.log(`转换字段 [${fieldName}] 为整数: ${value} → ${num}`);
             return isNaN(num) ? value : num;
           }
 
           // 转换为浮点数类型（包括 BigDecimal）
           if (typeName.includes('Double') || typeName.includes('Float') || typeName.includes('Long')) {
             const num = parseFloat(value);
-            console.log(`转换字段 [${fieldName}] 为浮点数: ${value} → ${num}`);
             return isNaN(num) ? value : num;
           }
 
@@ -490,12 +495,10 @@ const GenericCrud = <T extends Record<string, any>>({
           if (typeName.includes('BigDecimal')) {
             const num = parseFloat(value);
             if (isNaN(num)) {
-              console.log(`转换字段 [${fieldName}] BigDecimal无效，保持原值: ${value}`);
               return value;
             }
             // 转换为字符串，整数格式化为 "12.0"，小数保持原样
             const result = num % 1 === 0 ? num.toFixed(1) : String(num);
-            console.log(`转换字段 [${fieldName}] 为BigDecimal字符串: ${value} → "${result}"`);
             return result;
           }
 
@@ -508,31 +511,26 @@ const GenericCrud = <T extends Record<string, any>>({
           convertedData[key] = convertValue(key, value);
         });
 
-        console.log('🔄 数据类型转换:', {
-          原始数据: values,
-          转换后数据: convertedData,
-        });
-
         // ⭐ 如果配置了 dataField，将所有值包装到该字段中
         let submitData = convertedData;
         if (dynamicEntity?.dataField) {
           submitData = {
             [dynamicEntity.dataField]: convertedData,
           };
-          console.log('更新数据包装:', {
-            原始数据: convertedData,
-            提交数据: submitData,
-            包装字段: dynamicEntity.dataField,
-          });
         }
 
-        console.log('📤 最终提交的数据:', submitData);
-        await finalCrudOperations.update(currentRecord[rowKey], submitData);
-        setUpdateModalVisible(false);
-        setCurrentRecord(null);
-        actionRef?.reload();
-        if (callbacks.onUpdateSuccess) {
-          callbacks.onUpdateSuccess();
+        const success = await finalCrudOperations.update(currentRecord[rowKey], submitData);
+
+        // 只有成功时才关闭弹窗并刷新
+        if (success) {
+          setUpdateModalVisible(false);
+          setCurrentRecord(null);
+          actionRef.current?.reload();
+          if (callbacks.onUpdateSuccess) {
+            callbacks.onUpdateSuccess();
+          }
+        } else {
+          message.error('更新失败');
         }
       } catch (error) {
         if (callbacks.onError) {

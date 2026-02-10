@@ -22,13 +22,6 @@ const RelationSelect: React.FC<RelationSelectProps> = ({
   mode,
   disabled = false,
 }) => {
-  console.log('🔗 [RelationSelect] 组件渲染:', {
-    value,
-    relationConfig,
-    mode,
-    disabled,
-  });
-
   const [loading, setLoading] = useState(false);
   const [options, setOptions] = useState<{ label: string; value: any }[]>([]);
 
@@ -40,17 +33,8 @@ const RelationSelect: React.FC<RelationSelectProps> = ({
     multiple = false,
   } = relationConfig;
 
-  console.log('🔗 [RelationSelect] 解构后的配置:', {
-    entityClassName,
-    entityName,
-    displayField,
-    valueField,
-    multiple,
-  });
-
   // 加载关联实体数据
   useEffect(() => {
-    console.log('🔗 [RelationSelect] useEffect 开始加载数据');
     const loadRelationData = async () => {
       try {
         setLoading(true);
@@ -69,7 +53,6 @@ const RelationSelect: React.FC<RelationSelectProps> = ({
           setOptions(opts);
         }
       } catch (error) {
-        console.error('Failed to load relation data:', error);
       } finally {
         setLoading(false);
       }

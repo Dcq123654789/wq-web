@@ -271,16 +271,12 @@ export default function ServicePage() {
       // 回调函数
       callbacks={{
         onCreateSuccess: () => {
-          console.log('服务创建成功');
         },
         onUpdateSuccess: () => {
-          console.log('服务更新成功');
         },
         onDeleteSuccess: () => {
-          console.log('服务删除成功');
         },
         onError: (error, operation) => {
-          console.error(`服务${operation}操作失败:`, error);
         },
       }}
     />

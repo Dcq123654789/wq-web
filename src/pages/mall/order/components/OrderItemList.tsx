@@ -249,7 +249,6 @@ export default function OrderItemList({ orderId }: OrderItemListProps) {
       // 回调函数
       callbacks={{
         onError: (error, operation) => {
-          console.error(`订单明细${operation}操作失败:`, error);
         },
       }}
     />

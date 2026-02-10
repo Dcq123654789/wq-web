@@ -174,7 +174,6 @@ export default function ActivityRegistrationPage() {
           // 删除成功后的回调
         },
         onError: (error, operation) => {
-          console.error(`${operation} 操作失败:`, error);
         },
       }}
     />

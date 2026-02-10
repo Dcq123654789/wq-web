@@ -143,7 +143,6 @@ export default function ActivitiesPage() {
             },
             // normalize: 当值被设置到表单时调用（编辑时，从后端数据转为表单数据）
             normalize: (value: any) => {
-              console.log('tags normalize (后端→表单):', value);
               // 如果是字符串，转换为数组
               if (typeof value === 'string' && value) {
                 return value.split(',').map(t => t.trim()).filter(t => t);
@@ -158,8 +157,6 @@ export default function ActivitiesPage() {
             valueType: 'text',
             // 编辑时：将后端数据转换为对象传给 MapPicker
             normalize: (value: any, record: any) => {
-              console.log('📍 locationAddress normalize (后端→表单):', value);
-              console.log('📍 完整的 record 数据:', record);
 
               // 如果 value 已经是对象（包含 lng/lat），直接返回
               if (value && typeof value === 'object' && (value.lng || value.lat)) {
@@ -191,13 +188,11 @@ export default function ActivitiesPage() {
                 modalTitle="选择活动地点"
                 modalWidth={900}
                 onChange={(locationInfo: any) => {
-                  console.log('📍 地图选择器 onChange - 位置信息:', locationInfo);
 
                   // 获取表单实例
                   const form = formProps.form;
 
                   if (!form) {
-                    console.error('❌ 表单实例不存在，无法更新字段值');
                     return;
                   }
 
@@ -205,17 +200,14 @@ export default function ActivitiesPage() {
                   // 这样 normalize 函数可以正确读取 address 字段
                   formProps.onChange?.(locationInfo);
 
-                  console.log('✅ 表单实例已获取，保存完整位置信息:', locationInfo);
 
                   // 同时更新经纬度字段（保持原有逻辑）
                   if (locationInfo) {
                     if (locationInfo.lng !== undefined && locationInfo.lng !== null) {
                       form.setFieldValue('longitude', locationInfo.lng);
-                      console.log(`✅ 已设置经度 (longitude): ${locationInfo.lng}`);
                     }
                     if (locationInfo.lat !== undefined && locationInfo.lat !== null) {
                       form.setFieldValue('latitude', locationInfo.lat);
-                      console.log(`✅ 已设置纬度 (latitude): ${locationInfo.lat}`);
                     }
                   }
                 }}
@@ -303,7 +295,6 @@ export default function ActivitiesPage() {
           // 删除成功后的回调
         },
         onError: (error, operation) => {
-          console.error(`${operation} 操作失败:`, error);
         },
       }}
     />

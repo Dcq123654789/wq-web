@@ -78,7 +78,6 @@ export default function CommunityPage() {
             valueType: 'text',
             // 编辑时：将后端数据转换为对象传给 MapPicker
             normalize: (value: any, record: any) => {
-              console.log('📍 detailAddress normalize (后端→表单):', value);
 
               // 如果是字符串地址，需要结合经纬度字段重建对象
               if (typeof value === 'string' && value) {
@@ -124,39 +123,31 @@ export default function CommunityPage() {
                     modalTitle="选择社区位置"
                     modalWidth={900}
                     onChange={(locationInfo: any) => {
-                      console.log('📍 地图选择器 onChange - 位置信息:', locationInfo);
 
                       if (!form) {
-                        console.error('❌ 表单实例不存在，无法更新字段值');
                         return;
                       }
 
                       // ⭐ 关键修改：只保存 address 字符串到 detailAddress 字段
                       formProps.onChange?.(locationInfo?.address || '');
 
-                      console.log('✅ 已保存地址字符串到 detailAddress:', locationInfo?.address);
 
                       // 同时更新经纬度和省市区字段
                       if (locationInfo) {
                         if (locationInfo.lng !== undefined && locationInfo.lng !== null) {
                           form.setFieldValue('longitude', locationInfo.lng);
-                          console.log(`✅ 已设置经度: ${locationInfo.lng}`);
                         }
                         if (locationInfo.lat !== undefined && locationInfo.lat !== null) {
                           form.setFieldValue('latitude', locationInfo.lat);
-                          console.log(`✅ 已设置纬度: ${locationInfo.lat}`);
                         }
                         if (locationInfo.province) {
                           form.setFieldValue('province', locationInfo.province);
-                          console.log(`✅ 已设置省份: ${locationInfo.province}`);
                         }
                         if (locationInfo.city) {
                           form.setFieldValue('city', locationInfo.city);
-                          console.log(`✅ 已设置城市: ${locationInfo.city}`);
                         }
                         if (locationInfo.district) {
                           form.setFieldValue('district', locationInfo.district);
-                          console.log(`✅ 已设置区/县: ${locationInfo.district}`);
                         }
                       }
                     }}
@@ -296,16 +287,12 @@ export default function CommunityPage() {
       // 回调函数
       callbacks={{
         onCreateSuccess: () => {
-          console.log('社区创建成功');
         },
         onUpdateSuccess: () => {
-          console.log('社区更新成功');
         },
         onDeleteSuccess: () => {
-          console.log('社区删除成功');
         },
         onError: (error, operation) => {
-          console.error(`社区${operation}操作失败:`, error);
         },
       }}
     />

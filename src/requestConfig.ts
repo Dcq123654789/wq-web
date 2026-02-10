@@ -55,28 +55,18 @@ export const requestConfig: RequestConfig = {
 
       // 如果是登录请求，不添加 token
       if (EXCLUDED_PATHS.some((path) => url.includes(path))) {
-        console.log('请求拦截器: 跳过登录请求', { url });
         return config;
       }
 
       // 从 localStorage 获取 accessToken
       const accessToken = localStorage.getItem('accessToken');
 
-      // 添加调试日志
       if (accessToken) {
-        console.log('请求拦截器: 添加 token', {
-          url,
-          hasToken: !!accessToken,
-          tokenPrefix: accessToken.substring(0, 20) + '...',
-        });
-
         // 添加 Authorization header
         config.headers = {
           ...config.headers,
           Authorization: `Bearer ${accessToken}`,
         };
-      } else {
-        console.log('请求拦截器: 没有 token', { url });
       }
 
       return config;

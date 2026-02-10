@@ -222,16 +222,12 @@ export default function WqUserPage() {
       // 回调函数
       callbacks={{
         onCreateSuccess: () => {
-          console.log('微信用户创建成功');
         },
         onUpdateSuccess: () => {
-          console.log('微信用户更新成功');
         },
         onDeleteSuccess: () => {
-          console.log('微信用户删除成功');
         },
         onError: (error, operation) => {
-          console.error(`微信用户${operation}操作失败:`, error);
         },
       }}
     />

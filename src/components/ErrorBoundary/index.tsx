@@ -37,7 +37,7 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // 可以将错误日志上报给服务器
-    console.error('ErrorBoundary 捕获到错误:', error, errorInfo);
+
 
     // 保存错误信息到 state
     this.setState({

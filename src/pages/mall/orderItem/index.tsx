@@ -191,16 +191,12 @@ export default function OrderItemPage() {
       // 回调函数
       callbacks={{
         onCreateSuccess: () => {
-          console.log('订单明细创建成功');
         },
         onUpdateSuccess: () => {
-          console.log('订单明细更新成功');
         },
         onDeleteSuccess: () => {
-          console.log('订单明细删除成功');
         },
         onError: (error, operation) => {
-          console.error(`订单明细${operation}操作失败:`, error);
         },
       }}
     />

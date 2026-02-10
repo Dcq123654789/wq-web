@@ -267,16 +267,12 @@ export default function ServiceCouponPage() {
       // 回调函数
       callbacks={{
         onCreateSuccess: () => {
-          console.log('优惠券创建成功');
         },
         onUpdateSuccess: () => {
-          console.log('优惠券更新成功');
         },
         onDeleteSuccess: () => {
-          console.log('优惠券删除成功');
         },
         onError: (error, operation) => {
-          console.error(`优惠券${operation}操作失败:`, error);
         },
       }}
     />

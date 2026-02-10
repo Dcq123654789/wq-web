@@ -283,16 +283,12 @@ export default function UserAddressPage() {
       // 回调函数
       callbacks={{
         onCreateSuccess: () => {
-          console.log('收货地址创建成功');
         },
         onUpdateSuccess: () => {
-          console.log('收货地址更新成功');
         },
         onDeleteSuccess: () => {
-          console.log('收货地址删除成功');
         },
         onError: (error, operation) => {
-          console.error(`收货地址${operation}操作失败:`, error);
         },
       }}
     />

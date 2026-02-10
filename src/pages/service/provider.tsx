@@ -272,16 +272,12 @@ export default function ServiceProviderPage() {
       // 回调函数
       callbacks={{
         onCreateSuccess: () => {
-          console.log('服务人员创建成功');
         },
         onUpdateSuccess: () => {
-          console.log('服务人员更新成功');
         },
         onDeleteSuccess: () => {
-          console.log('服务人员删除成功');
         },
         onError: (error, operation) => {
-          console.error(`服务人员${operation}操作失败:`, error);
         },
       }}
     />

@@ -197,53 +197,54 @@ function isComplexType(typeName: string): boolean {
 }
 
 /**
- * 根据字段名和类型获取列宽
+ * 根据字段名称的字数获取列宽
+ * 每个中文字符约 16px，预留 40px padding
  */
 function getColumnWidth(fieldName: string, valueType: string): number | undefined {
-  // ID字段 - 较窄
+  // 获取字段标题
+  const fieldTitle = fieldNameToTitle(fieldName);
+  const titleLength = fieldTitle.length;
+
+  // 基础宽度：字数 × 16px + 40px padding
+  const calculatedWidth = Math.ceil(titleLength * 16) + 40;
+
+  // 最小宽度 80px，最大宽度 400px
+  const finalWidth = Math.max(80, Math.min(400, calculatedWidth));
+
+  // 特殊字段的宽度调整
+
+  // ID字段 - 需要显示较长字符串
   if (fieldName === '_id' || fieldName === 'id') {
+    return 200;
+  }
+
+  // 时间字段 - 固定宽度（格式化后的日期时间约 19 个字符）
+  if (fieldName.includes('Time') || fieldName.includes('Date')) {
     return 180;
   }
 
-  // 时间字段 - 固定宽度
-  if (fieldName.includes('Time') || fieldName.includes('Date')) {
-    return 160;
-  }
-
-  // 状态字段 - 较窄
-  if (fieldName === 'status' || fieldName === 'gender' || fieldName === 'deleted') {
-    return 80;
-  }
-
-  // 文本类型字段
-  if (valueType === 'text' || valueType === 'textarea') {
-    // 根据字段名判断可能的内容长度
-    if (fieldName === 'nickname' || fieldName === 'username') {
-      return 120;
-    }
-    if (fieldName === 'phone' || fieldName === 'email') {
-      return 140;
-    }
-    if (fieldName === 'realName') {
-      return 100;
-    }
-    // 地址相关字段
-    if (fieldName.includes('address') || fieldName === 'province' || fieldName === 'city' || fieldName === 'district') {
-      return 120;
-    }
-    // OpenID 等长字符串
-    if (fieldName === 'openid' || fieldName === 'unionid') {
-      return 200;
-    }
-  }
-
-  // 数字类型 - 较窄
-  if (valueType === 'digit') {
+  // 状态、性别等枚举字段 - 较窄
+  if (fieldName === 'status' || fieldName === 'gender' || fieldName === 'deleted' || fieldName === 'auditStatus') {
     return 100;
   }
 
-  // 其他字段不设置宽度，自适应
-  return undefined;
+  // 数字类型 - 较窄
+  if (valueType === 'digit' || valueType === 'money') {
+    return 100;
+  }
+
+  // 图片字段 - 固定宽度
+  if (valueType === 'image') {
+    return 100;
+  }
+
+  // 其他文本字段使用计算宽度
+  if (valueType === 'text' || valueType === 'textarea') {
+    return finalWidth;
+  }
+
+  // 默认返回计算宽度
+  return finalWidth;
 }
 
 /**
@@ -289,8 +290,6 @@ export function convertEntityFieldsToColumns(
     });
   }
 
-  console.log('🔍 查询字段配置 (match):', { match, searchFields });
-
   Object.entries(entityFields).forEach(([fieldName, fieldInfo]) => {
     // 排除指定字段
     if (excludeFields.includes(fieldName)) {
@@ -326,11 +325,6 @@ export function convertEntityFieldsToColumns(
       title = fieldOverrides[fieldName].label!;
     }
 
-    // 调试：打印标题信息
-    if (fieldName === 'openid' || fieldName === 'nickname') {
-      console.log(`字段 [${fieldName}] - type: ${type}, typeName: ${typeName}, description: "${description}", 最终标题:`, title);
-    }
-
     const column: ProColumns = {
       title: title as any, // 确保 title 不会被自动格式化
       dataIndex: fieldName,
@@ -341,6 +335,10 @@ export function convertEntityFieldsToColumns(
       hideInSearch: !searchFields.includes(fieldName),
       // 为长文本字段设置宽度，避免占用过多空间
       width: getColumnWidth(fieldName, actualTypeName),
+      // ⭐ 内容超出时显示省略号，鼠标悬停显示完整内容
+      ellipsis: true,
+      // ⭐ 开启 tooltip，鼠标悬停时显示完整内容
+      tooltip: (value) => value || '-', // 如果值为空显示 '-'
     };
 
     // ⭐ 应用字段覆盖配置（排除表单专用渲染器）
@@ -360,7 +358,6 @@ export function convertEntityFieldsToColumns(
         delete overrides.hideInSearch;
       }
       Object.assign(column, overrides);
-      console.log(`✅ 应用字段覆盖 [${fieldName}]:`, overrides);
     }
 
     // 头像字段使用图片渲染
@@ -377,7 +374,6 @@ export function convertEntityFieldsToColumns(
           style: { width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }
         });
       };
-      console.log(`Avatar column [${fieldName}]:`, column);
     }
 
     // 性别字段特殊处理：1=男，2=女
@@ -407,11 +403,6 @@ export function convertEntityFieldsToColumns(
       (column as any).isRelation = true;
       (column as any).relationConfig = relationConfig;
       (column as any).requestAsync = true;
-
-      console.log(`🔗 [convertEntityFieldsToColumns] 关联字段 [${fieldName}] 配置:`, {
-        isRelation: true,
-        relationConfig,
-      });
 
       // 自定义渲染：显示关联对象的名称
       (column as any).render = (_: any, record: any) => {
@@ -448,27 +439,9 @@ export function convertEntityFieldsToFormFields(
 ): FormFieldConfig[] {
   const formFields: FormFieldConfig[] = [];
 
-  console.log('🔗 [convertEntityFieldsToFormFields] 开始处理表单字段');
-  console.log('🔋 所有后端字段:', Object.keys(entityFields));
-  console.log('📋 excludeFields:', excludeFields);
-  console.log('🔗 relations 配置:', relations);
-
   Object.entries(entityFields).forEach(([fieldName, fieldInfo]) => {
-    // 🔍 调试：特别是 communityId 字段
-    if (fieldName === 'communityId' || fieldName.includes('Id')) {
-      console.log(`🔍 检查字段 [${fieldName}]:`, {
-        fieldInfo,
-        inExcludeFields: excludeFields.includes(fieldName),
-        fullTypeName: fieldInfo.typeName || fieldInfo.type || '',
-        isComplexType: isComplexType(fieldInfo.typeName || fieldInfo.type || ''),
-        isRelation: relations && relations[fieldName],
-        relationConfig: relations?.[fieldName],
-      });
-    }
-
     // 排除指定字段
     if (excludeFields.includes(fieldName)) {
-      console.log(`❌ 字段 [${fieldName}] 被排除（在 excludeFields 中）`);
       return;
     }
 
@@ -478,16 +451,8 @@ export function convertEntityFieldsToFormFields(
     // 检查是否是关联字段
     const isRelation = relations && relations[fieldName];
 
-    console.log(`🔍 字段 [${fieldName}] 检查:`, {
-      fullTypeName,
-      isRelation: !!isRelation,
-      relationsKeys: relations ? Object.keys(relations) : 'no relations',
-      hasThisFieldInRelations: !!(relations && relations[fieldName]),
-    });
-
     // 如果是复杂类型但不是关联字段，则排除
     if (!isRelation && isComplexType(fullTypeName)) {
-      console.log(`❌ 字段 [${fieldName}] 被排除（复杂类型且不是关联字段）`);
       return;
     }
 
@@ -546,25 +511,11 @@ export function convertEntityFieldsToFormFields(
 
       // 标记为异步选择器，需要动态加载选项
       (formField as any).requestAsync = true;
-
-      console.log(`✅ 关联字段 [${fieldName}] 已配置:`, {
-        valueType: formField.valueType,
-        isRelation: (formField as any).isRelation,
-        relationConfig: (formField as any).relationConfig,
-      });
     }
 
     // 应用字段覆盖配置
     if (fieldOverrides && fieldOverrides[fieldName]) {
       Object.assign(formField, fieldOverrides[fieldName]);
-      if (fieldName === 'communityId') {
-        console.log(`⚠️ 关联字段 [${fieldName}] 被 fieldOverrides 覆盖:`, fieldOverrides[fieldName]);
-      }
-    }
-
-    // 🔍 添加 communityId 到 formFields 的调试
-    if (fieldName === 'communityId') {
-      console.log(`📝 添加字段 [${fieldName}] 到 formFields:`, formField);
     }
 
     formFields.push(formField);
@@ -584,7 +535,6 @@ export function convertEntityFieldsToFormFields(
           ...overrideConfig,
         };
 
-        console.log('✅ 从 fieldOverrides 添加额外字段:', fieldName, formField);
         formFields.push(formField);
       }
     });

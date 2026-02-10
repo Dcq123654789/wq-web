@@ -19,21 +19,12 @@ export const request = {
       // 从 localStorage 获取 accessToken
       const accessToken = typeof localStorage !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
+      // 添加 Authorization header（不覆盖其他 headers）
       if (accessToken) {
-        console.log('✅ [运行时] 请求拦截器: 添加 token', {
-          url: config.url,
-          hasToken: !!accessToken,
-        });
-
-        // 添加 Authorization header（不覆盖其他 headers）
         config.headers = {
           ...config.headers,
           Authorization: `Bearer ${accessToken}`,
         };
-      } else {
-        console.log('⚠️ [运行时] 请求拦截器: 没有 token', {
-          url: config.url,
-        });
       }
 
       return config;
@@ -41,9 +32,6 @@ export const request = {
   ],
   responseInterceptors: [
     (response: any) => {
-      console.log('📥 [运行时] 响应拦截器:', {
-        status: response.status,
-      });
       return response;
     },
   ],

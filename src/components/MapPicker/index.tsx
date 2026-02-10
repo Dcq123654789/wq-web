@@ -93,7 +93,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
   useEffect(() => {
     // @ts-ignore
     window.initBMap = () => {
-      console.log('百度地图 SDK 加载完成');
       setSdkReady(true);
       setMapLoading(false);
     };
@@ -102,7 +101,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
   // ⭐ 同步 value prop 到 location 状态（编辑时加载数据）
   useEffect(() => {
     if (value && Object.keys(value).length > 0) {
-      console.log('📍 MapPicker value prop 已改变，更新 location 状态:', value);
       setLocation(value);
     }
   }, [value]);
@@ -111,9 +109,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
   useEffect(() => {
     const preloadMapScript = () => {
       if (!scriptLoadRef.current && !checkSdkReady()) {
-        console.log('预加载地图脚本...');
         loadMapScript().catch((err) => {
-          console.warn('预加载地图脚本失败，将在打开弹窗时重试:', err);
         });
       }
     };
@@ -127,12 +123,10 @@ const MapPicker: React.FC<MapPickerProps> = ({
     if (mapType === 'amap') {
       // @ts-ignore
       const ready = typeof window.AMap !== 'undefined';
-      console.log('高德地图 SDK 状态:', ready ? '已加载' : '未加载');
       return ready;
     } else {
       // @ts-ignore
       const ready = typeof window.BMap !== 'undefined';
-      console.log('百度地图 SDK 状态:', ready ? '已加载' : '未加载');
       return ready;
     }
   };
@@ -141,7 +135,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
   const loadMapScript = (): Promise<void> => {
     return new Promise((resolve, reject) => {
       if (scriptLoadRef.current) {
-        console.log('地图脚本已在加载中或已加载');
         resolve();
         return;
       }
@@ -150,9 +143,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
       setMapLoading(true);
       setLoadError(null);
 
-      console.log('开始加载地图脚本...');
-      console.log('地图类型:', mapType);
-      console.log('使用 Key:', amapKey?.substring(0, 10) + '...');
 
       // 高德地图安全密钥配置（必须在加载脚本之前设置）
       if (mapType === 'amap' && amapSecret) {
@@ -160,7 +150,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
         window._AMapSecurityConfig = {
           securityJsCode: amapSecret,
         };
-        console.log('高德地图安全密钥已配置');
       }
 
       const script = document.createElement('script');
@@ -170,15 +159,12 @@ const MapPicker: React.FC<MapPickerProps> = ({
       if (mapType === 'amap') {
         // 高德地图脚本
         script.src = `https://webapi.amap.com/maps?v=2.0&key=${amapKey}&plugin=AMap.Geocoder`;
-        console.log('高德地图脚本 URL:', script.src);
       } else {
         // 百度地图脚本
         script.src = `https://api.map.baidu.com/api?v=3.0&ak=${bmapKey}&callback=initBMap`;
-        console.log('百度地图脚本 URL:', script.src);
       }
 
       script.onload = () => {
-        console.log('地图脚本加载成功');
 
         // 高德地图需要额外等待 AMap 对象初始化
         if (mapType === 'amap') {
@@ -186,7 +172,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
           setTimeout(() => {
             // @ts-ignore
             if (window.AMap) {
-              console.log('高德地图 AMap 对象已就绪');
               setSdkReady(true);
             }
             setMapLoading(false);
@@ -200,7 +185,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
       };
 
       script.onerror = (e) => {
-        console.error('地图脚本加载失败:', e);
         const errorMsg = mapType === 'amap'
           ? '高德地图加载失败，可能是 API Key 配置错误或网络问题'
           : '百度地图加载失败，请检查 AK 或网络连接';
@@ -223,11 +207,9 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
       // 检查 SDK 是否已加载
       if (!checkSdkReady()) {
-        console.log('SDK 未加载，开始加载...');
         await loadMapScript();
 
         // 等待 SDK 初始化 - 高德地图需要更长的初始化时间
-        console.log('等待 SDK 初始化...');
 
         // 轮询检查 SDK 是否已加载完成
         const maxWaitTime = 10000; // 最多等待10秒
@@ -237,20 +219,16 @@ const MapPicker: React.FC<MapPickerProps> = ({
         while (!checkSdkReady() && waitTime < maxWaitTime) {
           await new Promise(resolve => setTimeout(resolve, checkInterval));
           waitTime += checkInterval;
-          console.log(`等待 SDK... ${waitTime}ms`);
         }
 
         if (!checkSdkReady()) {
-          console.error('SDK 加载超时');
           // 不抛出错误，而是尝试继续
-          console.warn('SDK 加载超时，但尝试继续初始化');
         }
       }
 
       // 额外等待一下，确保 SDK 完全就绪
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      console.log('开始初始化地图...');
 
       if (mapType === 'amap') {
         initAMap();
@@ -258,7 +236,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
         initBMap();
       }
     } catch (error: any) {
-      console.error('地图初始化失败:', error);
       setLoadError(error.message || '地图初始化失败');
       message.error(error.message || '地图初始化失败');
       setMapLoading(false);
@@ -277,14 +254,11 @@ const MapPicker: React.FC<MapPickerProps> = ({
       return;
     }
 
-    console.log('初始化高德地图...');
 
     // 添加全局错误监听，捕获 AMap 特定错误
     const errorHandler = (event: ErrorEvent) => {
-      console.error('捕获到错误:', event.message);
       if (event.message.includes('USERKEY_PLAT_NOMATCH') ||
           event.message.includes('Unimplemented type')) {
-        console.warn('检测到 API Key 平台不匹配错误');
         setLoadError('API Key 配置错误：Key 可能不是 Web JS API 类型');
         setMapLoading(false);
         setSdkReady(false);
@@ -302,7 +276,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
       });
 
       mapRef.current = map;
-      console.log('高德地图实例创建成功');
 
       // 添加工具栏
       AMap.plugin(['AMap.ToolBar', 'AMap.Scale'], () => {
@@ -314,7 +287,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
       // 添加点击事件
       map.on('click', (e: any) => {
-        console.log('地图点击事件:', e.lnglat);
         const { lng, lat } = e.lnglat;
         handleMapClick(lng, lat);
       });
@@ -327,7 +299,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
       // 初始化地理编码器
       AMap.plugin('AMap.Geocoder', () => {
         geocoderRef.current = new AMap.Geocoder();
-        console.log('高德地图地理编码器初始化成功');
       });
 
       // 移除错误监听器
@@ -338,7 +309,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
       setMapLoading(false);
       setLoadError(null);
     } catch (error) {
-      console.error('高德地图初始化错误:', error);
       window.removeEventListener('error', errorHandler);
       throw error;
     }
@@ -355,7 +325,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
       return;
     }
 
-    console.log('初始化百度地图...');
 
     try {
       const point = new BMap.Point(
@@ -368,11 +337,9 @@ const MapPicker: React.FC<MapPickerProps> = ({
       map.enableScrollWheelZoom(true);
 
       mapRef.current = map;
-      console.log('百度地图实例创建成功');
 
       // 添加点击事件
       map.addEventListener('click', (e: any) => {
-        console.log('地图点击事件:', e.point);
         const point = e.point;
         handleMapClick(point.lng, point.lat);
       });
@@ -389,7 +356,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
       setMapLoading(false);
       setLoadError(null);
     } catch (error) {
-      console.error('百度地图初始化错误:', error);
       throw error;
     }
   };
@@ -446,7 +412,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   // 处理地图点击
   const handleMapClick = async (lng: number, lat: number) => {
-    console.log('处理地图点击:', lng, lat);
 
     if (mapType === 'amap') {
       addMarker([lng, lat]);
@@ -461,14 +426,11 @@ const MapPicker: React.FC<MapPickerProps> = ({
   // 逆地理编码
   const reverseGeocode = async (lng: number, lat: number) => {
     try {
-      console.log('开始逆地理编码...');
 
       if (mapType === 'amap') {
         // 高德地图逆地理编码
         if (geocoderRef.current) {
           geocoderRef.current.getAddress([lng, lat], (status: string, result: any) => {
-            console.log('逆地理编码状态:', status);
-            console.log('逆地理编码结果:', result);
 
             if (status === 'complete') {
               const addressInfo = result.regeocode.formattedAddress;
@@ -496,8 +458,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
           const point = new BMap.Point(lng, lat);
 
           geocoderRef.current.getLocation(point, (result: any) => {
-            console.log('百度逆地理编码状态:', geocoderRef.current.getStatus());
-            console.log('百度逆地理编码结果:', result);
 
             if (geocoderRef.current.getStatus() === (window as any).BMAP_STATUS_SUCCESS) {
               const addressInfo = result.address;
@@ -519,7 +479,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
         }
       }
     } catch (error) {
-      console.error('逆地理编码失败:', error);
       message.error('地址解析失败');
     }
   };
@@ -788,7 +747,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
                 <Button
                   type="primary"
                   onClick={() => {
-                    console.log('用户点击重试');
                     setLoadError(null);
                     setMapLoading(true);
                     initMap();

@@ -24,7 +24,6 @@ const CreateModal: React.FC<CreateModalProps> = ({
   // ⭐ 添加调试日志
   React.useEffect(() => {
     if (data) {
-      console.log('CreateModal 接收到默认值 data:', data);
     }
   }, [data]);
 

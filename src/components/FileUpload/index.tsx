@@ -72,16 +72,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
     };
   }, [headers]);
 
-  console.log('🔑 FileUpload 上传配置:', {
-    action,
-    uploadType,
-    maxCount,
-    hasToken: !!uploadHeaders.Authorization,
-  });
-
   // 将 value 转换为 fileList 格式
   const fileList: UploadFile[] = React.useMemo(() => {
-    console.log('🔄 重新计算 fileList, value:', value);
 
     if (!value) return [];
 
@@ -93,7 +85,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
         status: 'done' as const,
         url,
       }));
-      console.log('✅ 多文件 fileList:', list);
       return list;
     }
 
@@ -107,7 +98,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
           url: value,
         },
       ];
-      console.log('✅ 单文件 fileList:', list);
       return list;
     }
 
@@ -116,14 +106,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
   // 处理文件上传前校验
   const beforeUpload = (file: File) => {
-    console.log('📤 准备上传文件:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      action,
-      headers: uploadHeaders,
-    });
-
     // 文件大小校验
     const isLtMaxSize = file.size / 1024 / 1024 < maxSize;
     if (!isLtMaxSize) {
@@ -140,26 +122,18 @@ const FileUpload: React.FC<FileUploadProps> = ({
   ) => {
     const { file, fileList } = info;
 
-    console.log('📤 文件状态变化:', file.status, '文件名:', file.name);
 
     if (file.status === 'done') {
-      console.log('✅ 上传完成，开始处理响应');
       const response = file.response as any;
 
       // 🔍 详细调试：检查响应结构
-      console.log('📤 服务器响应:', response);
-      console.log('📤 response.url:', response?.url);
-      console.log('📤 response.data:', response?.data);
-      console.log('📤 response.data.url:', response?.data?.url);
 
       // 尝试多种可能的 URL 路径
       let fileUrl = response?.url || response?.data?.url || response?.data?.fileName;
 
       // ⚠️ 不删除空格！URL 中的空格会被浏览器自动编码为 %20%20
-      console.log('📤 提取的 fileUrl:', fileUrl);
 
       if (fileUrl) {
-        console.log('✅ 上传成功，URL:', fileUrl);
 
         // ⭐ 关键修复：更新 file 对象的 url 属性，这样 fileList 会立即显示图片
         file.url = fileUrl;
@@ -168,25 +142,18 @@ const FileUpload: React.FC<FileUploadProps> = ({
         if (isMultiple) {
           const currentUrls = Array.isArray(value) ? value : [];
           const newUrls = [...currentUrls, fileUrl];
-          console.log('✅ 多文件模式，新URL数组:', newUrls);
           onChange?.(newUrls);
         } else {
           // 单文件模式：直接设置URL
-          console.log('✅ 单文件模式，设置URL:', fileUrl);
           onChange?.(fileUrl);
         }
         message.success('上传成功');
       } else {
-        console.error('❌ 上传失败：未返回文件URL');
-        console.error('❌ 响应结构:', response);
         message.error('上传失败：未返回文件URL');
       }
     } else if (file.status === 'error') {
-      console.error('❌ 上传错误');
-      console.error('❌ 错误信息:', file.response);
       message.error('上传失败');
     } else if (file.status === 'uploading') {
-      console.log('⏳ 正在上传...');
     }
 
     // ⭐ 重要：返回更新后的 fileList，确保 Upload 组件状态正确
@@ -212,12 +179,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
   // ⭐ 自定义上传函数
   const customRequest: UploadProps['customRequest'] = async (options) => {
     const { file, onProgress, onSuccess, onError } = options;
-
-    console.log('🚀 开始自定义上传:', {
-      fileName: (file as File).name,
-      fileSize: (file as File).size,
-      action,
-    });
 
     const formData = new FormData();
     formData.append('file', file);
@@ -254,21 +215,17 @@ const FileUpload: React.FC<FileUploadProps> = ({
         },
       });
 
-      console.log('✅ 上传成功，响应:', response);
 
       // 检查响应格式
       let fileUrl = response?.url || response?.data?.url;
 
       // ⚠️ 不删除空格！保留原始 URL
-      console.log('📤 提取的 fileUrl:', fileUrl);
 
       if (fileUrl) {
-        console.log('✅ 获取到文件URL，开始验证图片是否可访问:', fileUrl);
 
         // ⭐ 验证图片是否可以访问
         const img = new Image();
         img.onload = () => {
-          console.log('✅ 图片验证成功，可以访问');
           // 图片可以访问，调用成功回调
           onSuccess(
             {
@@ -282,10 +239,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
           if (isMultiple) {
             const currentUrls = Array.isArray(value) ? value : [];
             const newUrls = [...currentUrls, fileUrl];
-            console.log('✅ 多文件模式，立即更新值:', newUrls);
             onChange?.(newUrls);
           } else {
-            console.log('✅ 单文件模式，立即更新值:', fileUrl);
             onChange?.(fileUrl);
           }
 
@@ -293,8 +248,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
         };
 
         img.onerror = () => {
-          console.error('❌ 图片验证失败，无法访问:', fileUrl);
-          console.error('❌ 这通常意味着后端返回了URL，但文件没有成功上传到OSS');
           message.error('上传失败：文件无法访问，请检查后端上传逻辑');
           onError(new Error('文件上传到服务器失败') as UploadRequestError);
         };
@@ -303,17 +256,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
         img.src = fileUrl;
         setTimeout(() => {
           if (!img.complete) {
-            console.error('❌ 图片验证超时');
             message.error('上传超时：文件无法访问');
             onError(new Error('文件验证超时') as UploadRequestError);
           }
         }, 10000); // 10秒超时
       } else {
-        console.error('❌ 响应中没有找到 URL');
         onError(new Error('上传失败：未返回文件URL') as UploadRequestError);
       }
     } catch (error: any) {
-      console.error('❌ 上传失败:', error);
       onError(error);
     }
   };
@@ -347,17 +297,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
       disabled={disabled}
       multiple={isMultiple}
       onPreview={(file) => {
-        console.log('🔍 预览文件:', file);
         // 图片预览
         if (uploadType === 'image' && file.url) {
           // 检查图片是否能加载
           const img = new Image();
           img.onload = () => {
-            console.log('✅ 图片加载成功');
             window.open(file.url, '_blank');
           };
           img.onerror = () => {
-            console.error('❌ 图片加载失败:', file.url);
             message.error('图片加载失败，文件可能未正确上传到服务器');
           };
           img.src = file.url;

@@ -35,9 +35,7 @@ const DynamicForm: React.FC<any> = ({
         if (typeof value === 'string') {
           try {
             processed[fieldName] = dayjs(value);
-            console.log(`📅 转换日期字段 [${fieldName}]: ${value} -> dayjs`);
           } catch (error) {
-            console.warn(`⚠️ 日期字段 [${fieldName}] 转换失败:`, value, error);
           }
         }
       }
@@ -49,95 +47,63 @@ const DynamicForm: React.FC<any> = ({
   // 当 initialValues 变化时，设置表单值
   useEffect(() => {
     if (initialValues && formRef.current) {
-      console.log('DynamicForm 设置表单初始值:', initialValues);
       // 🔧 在 update 模式下处理日期转换
       const processedValues = mode === 'update' ? processInitialValues(initialValues, formFields) : initialValues;
-      console.log('DynamicForm 处理后的初始值:', processedValues);
       formRef.current.setFieldsValue(processedValues);
     }
   }, [initialValues, mode, formFields]);
-
-  // 添加调试日志
-  useEffect(() => {
-    console.log('DynamicForm 渲染:', {
-      mode,
-      initialValues,
-      formFieldsCount: formFields?.length,
-    });
-  }, [mode, initialValues, formFields]);
   // 渲染单个字段
   const renderField = (field: FormFieldConfig) => {
-    try {
-      const { name, label, valueType = 'text', required, render, renderFormItem, fieldProps = {} } = field;
-      const rules = buildValidationRules(field);
-      const fieldName = Array.isArray(name) ? name : [name];
+    const { name, label, valueType = 'text', required, render, renderFormItem, fieldProps = {} } = field;
+    const rules = buildValidationRules(field);
+    const fieldName = Array.isArray(name) ? name : [name];
 
-      // 🔍 调试：特别是 communityId 字段
-      if (fieldName[0] === 'communityId') {
-        console.log(`🔍 [DynamicForm] 渲染字段 [${fieldName}]:`, {
-          field,
-          valueType,
-          isRelation: (field as any).isRelation,
-          relationConfig: (field as any).relationConfig,
-          hasRender: !!render,
-          hasRenderFormItem: !!renderFormItem,
-        });
-      }
+    const commonProps = {
+      name: fieldName,
+      label,
+      required,
+      rules,
+      ...fieldProps,
+    };
 
-      const commonProps = {
-        name: fieldName,
-        label,
-        required,
-        rules,
-        ...fieldProps,
-      };
+    // 优先使用 renderFormItem（表单专用），如果没有则使用 render（通用渲染器）
+    const customRender = renderFormItem || render;
 
-      // 优先使用 renderFormItem（表单专用），如果没有则使用 render（通用渲染器）
-      const customRender = renderFormItem || render;
-
-      // 如果有自定义 render 函数，使用自定义渲染
-      if (customRender) {
-        console.log(`🎨 渲染自定义字段 [${fieldName}]`, { label, valueType });
-        return (
-          <ProForm.Item
-            key={fieldName.join('.')}
-            label={label}
-            rules={rules}
-            shouldUpdate={(prevValues, currentValues) => {
-              return prevValues[fieldName[0]] !== currentValues[fieldName[0]];
-            }}
-          >
-            {(form: any) => {
-              const value = form.getFieldValue(fieldName);
-              const onChange = (val: any) => {
-                console.log(`字段 [${fieldName}] onChange:`, val);
-                form.setFieldValue(fieldName, val);
-              };
-              console.log(`🎨 渲染自定义组件, 字段: [${fieldName}], 当前值:`, value);
-              return (
-                <>
-                  {customRender({
-                    value,
-                    onChange,
-                    record: initialValues,
-                    mode,
-                    form,
-                  })}
-                  {/* ⭐ 隐藏字段：确保表单提交时包含这个字段的值 */}
-                  <ProForm.Item name={fieldName} noStyle>
-                    <input type="hidden" />
-                  </ProForm.Item>
-                </>
-              );
-            }}
-          </ProForm.Item>
-        );
-      }
-
-      // 🔍 添加 switch 前的日志
-      if (fieldName[0] === 'communityId') {
-        console.log(`✅ [${fieldName}] 通过自定义渲染检查，准备进入 switch，valueType=${valueType}`);
-      }
+    // 如果有自定义 render 函数，使用自定义渲染
+    if (customRender) {
+      return (
+        <ProForm.Item
+          key={fieldName.join('.')}
+          label={label}
+          rules={rules}
+          shouldUpdate={(prevValues, currentValues) => {
+            return prevValues[fieldName[0]] !== currentValues[fieldName[0]];
+          }}
+        >
+          {(form: any) => {
+            const value = form.getFieldValue(fieldName);
+            const onChange = (val: any) => {
+              form.setFieldValue(fieldName, val);
+            };
+            return (
+              <>
+                {customRender({
+                  value,
+                  onChange,
+                  record: initialValues,
+                  mode,
+                  form,
+                })}
+                {/* ⭐ 隐藏字段：确保表单提交时包含这个字段的值 */}
+                <ProForm.Item name={fieldName} noStyle>
+                  <input type="hidden" />
+                </ProForm.Item>
+              </>
+            );
+          }}
+        </ProForm.Item>
+      );
+    }
 
     // 根据 valueType 渲染不同的表单组件
     switch (valueType) {
@@ -151,17 +117,8 @@ const DynamicForm: React.FC<any> = ({
         return <ProFormTextArea key={fieldName.join('.')} {...commonProps} />;
 
       case 'select':
-        // 🔍 调试日志
-        if (fieldName[0] === 'communityId') {
-          console.log(`✅ 进入 case 'select' 分支 [${fieldName}]:`, {
-            isRelation: (field as any).isRelation,
-            hasRelationConfig: !!(field as any).relationConfig,
-          });
-        }
-
         // 关联字段使用 RelationSelect 组件
         if ((field as any).isRelation && (field as any).relationConfig) {
-          console.log(`🔗 使用 RelationSelect 渲染关联字段 [${fieldName}]`);
           return (
             <ProForm.Item
               key={fieldName.join('.')}
@@ -172,14 +129,11 @@ const DynamicForm: React.FC<any> = ({
             >
               {(form: any) => {
                 const value = form.getFieldValue(fieldName);
-                console.log(`🔗 关联字段 [${fieldName}] ProForm.Item render 执行, 当前值:`, value);
-                console.log(`🔗 关联字段 [${fieldName}] form 实例:`, form);
                 return (
                   <>
                     <RelationSelect
                       value={value}
                       onChange={(val: any) => {
-                        console.log(`🔗 关联字段 [${fieldName}] onChange:`, val);
                         form.setFieldValue(fieldName, val);
                       }}
                       relationConfig={(field as any).relationConfig}
@@ -194,14 +148,6 @@ const DynamicForm: React.FC<any> = ({
               }}
             </ProForm.Item>
           );
-        }
-
-        // 🔍 调试日志：如果是关联字段但没有进入上面的 if
-        if (fieldName[0] === 'communityId') {
-          console.warn(`⚠️ 关联字段 [${fieldName}] 没有使用 RelationSelect，使用普通 Select`, {
-            isRelation: (field as any).isRelation,
-            hasRelationConfig: !!(field as any).relationConfig,
-          });
         }
 
         // 普通枚举选择器
@@ -295,7 +241,6 @@ const DynamicForm: React.FC<any> = ({
         // 图片字段，如果有 renderFormItem 或 render 函数则使用自定义渲染
         const imageRender = field.renderFormItem || field.render;
         if (imageRender) {
-          console.log(`🎨 渲染图片字段 [${fieldName}]`, { label });
           return (
             <ProForm.Item
               key={fieldName.join('.')}
@@ -308,10 +253,8 @@ const DynamicForm: React.FC<any> = ({
               {(form: any) => {
                 const value = form.getFieldValue(fieldName);
                 const onChange = (val: any) => {
-                  console.log(`图片字段 [${fieldName}] onChange:`, val);
                   form.setFieldValue(fieldName, val);
                 };
-                console.log(`🎨 渲染图片组件, 字段: [${fieldName}], 当前值:`, value);
                 return (
                   <>
                     {imageRender({
@@ -366,14 +309,6 @@ const DynamicForm: React.FC<any> = ({
       default:
         return <ProFormText key={fieldName.join('.')} {...commonProps} />;
     }
-    } catch (error) {
-      console.error(`❌ 渲染字段 [${fieldName}] 时出错:`, error);
-      return (
-        <ProForm.Item key={fieldName.join('.')} label={label}>
-          <div style={{ color: 'red' }}>渲染出错: {String(error)}</div>
-        </ProForm.Item>
-      );
-    }
   };
 
   return (
@@ -381,7 +316,6 @@ const DynamicForm: React.FC<any> = ({
       formRef={formRef}
       initialValues={initialValues}
       onFinish={async (values) => {
-        console.log('📋 表单提交的值:', values);
         await onSubmit(values);
       }}
       submitter={{

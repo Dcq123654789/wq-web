@@ -283,16 +283,12 @@ export default function ServiceReviewPage() {
       // 回调函数
       callbacks={{
         onCreateSuccess: () => {
-          console.log('评价创建成功');
         },
         onUpdateSuccess: () => {
-          console.log('评价更新成功');
         },
         onDeleteSuccess: () => {
-          console.log('评价删除成功');
         },
         onError: (error, operation) => {
-          console.error(`评价${operation}操作失败:`, error);
         },
       }}
     />

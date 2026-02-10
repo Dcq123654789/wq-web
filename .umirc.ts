@@ -21,13 +21,7 @@ export default defineConfig({
         // 从 localStorage 获取 accessToken（运行时执行）
         const accessToken = typeof localStorage !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
-        if (accessToken) {
-          console.log('✅ 请求拦截器: 添加 token', {
-            url: config.url,
-            hasToken: !!accessToken,
-            tokenPrefix: accessToken.substring(0, 30) + '...',
-          });
-
+        if (accessToken) { 
           // 添加 Authorization header
           config.headers = {
             ...config.headers,

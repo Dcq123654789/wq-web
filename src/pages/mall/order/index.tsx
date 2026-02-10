@@ -212,16 +212,12 @@ export default function OrderPage() {
       // 回调函数
       callbacks={{
         onCreateSuccess: () => {
-          console.log('订单创建成功');
         },
         onUpdateSuccess: () => {
-          console.log('订单更新成功');
         },
         onDeleteSuccess: () => {
-          console.log('订单删除成功');
         },
         onError: (error, operation) => {
-          console.error(`订单${operation}操作失败:`, error);
         },
       }}
 

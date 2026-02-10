@@ -230,16 +230,12 @@ export default function ProductPage() {
       // 回调函数
       callbacks={{
         onCreateSuccess: () => {
-          console.log('商品创建成功');
         },
         onUpdateSuccess: () => {
-          console.log('商品更新成功');
         },
         onDeleteSuccess: () => {
-          console.log('商品删除成功');
         },
         onError: (error, operation) => {
-          console.error(`商品${operation}操作失败:`, error);
         },
       }}
     />

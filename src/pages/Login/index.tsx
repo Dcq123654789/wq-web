@@ -38,13 +38,6 @@ const Login: React.FC = () => {
       localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('adminInfo', JSON.stringify(admin));
 
-      // 调试日志
-      console.log('登录成功，token 已保存:', {
-        accessToken: accessToken.substring(0, 30) + '...',
-        refreshToken: refreshToken.substring(0, 30) + '...',
-        admin,
-      });
-
       message.success('登录成功');
 
       // 刷新初始状态

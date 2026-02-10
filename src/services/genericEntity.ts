@@ -215,7 +215,6 @@ export async function getEntityById<T = any>(
     }
     return null;
   } catch (error) {
-    console.error('Failed to get entity by id:', error);
     return null;
   }
 }

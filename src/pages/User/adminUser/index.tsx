@@ -233,16 +233,12 @@ export default function AdminUserPage() {
       // 回调函数
       callbacks={{
         onCreateSuccess: () => {
-          console.log('管理员创建成功');
         },
         onUpdateSuccess: () => {
-          console.log('管理员更新成功');
         },
         onDeleteSuccess: () => {
-          console.log('管理员删除成功');
         },
         onError: (error, operation) => {
-          console.error(`管理员${operation}操作失败:`, error);
         },
       }}
     />

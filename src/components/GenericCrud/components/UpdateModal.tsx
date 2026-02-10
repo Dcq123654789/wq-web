@@ -26,11 +26,6 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
 
     // 如果配置了 dataField，从 record[dataField] 中提取值
     const extracted = record[dataField];
-    console.log('UpdateModal 数据提取:', {
-      原始记录: record,
-      提取字段: dataField,
-      提取的值: extracted,
-    });
 
     return extracted || record;
   };

@@ -21,7 +21,8 @@
       "Bash(pnpm add:*)",
       "Bash(pnpm install)",
       "Bash(pnpm install:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(grep:*)"
     ]
   }
 }

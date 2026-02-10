@@ -59,12 +59,6 @@ export function extractFormFieldsFromColumns<T = any>(
       (field as any).requestAsync = (column as any).requestAsync;
     }
 
-    console.log(`📋 [extractFormFieldsFromColumns] 提取字段 [${field.name}]:`, {
-      valueType: field.valueType,
-      isRelation: (field as any).isRelation,
-      hasRelationConfig: !!(field as any).relationConfig,
-    });
-
     formFields.push(field);
   });
 
