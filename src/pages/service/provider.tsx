@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GenericCrud } from '@/components/GenericCrud';
-import { Image } from 'antd';
+import { Image, Drawer, Button } from 'antd';
+import { UnorderedListOutlined } from '@ant-design/icons';
 import FileUpload from '@/components/FileUpload';
+import ProviderOrderList from './provider/components/ProviderOrderList';
 
 /**
  * 服务人员管理页面
@@ -14,7 +16,20 @@ import FileUpload from '@/components/FileUpload';
  * - 支持评价和订单统计
  */
 export default function ServiceProviderPage() {
+  // 控制订单列表抽屉的显示
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [selectedProviderId, setSelectedProviderId] = useState<string>('');
+  const [selectedProviderName, setSelectedProviderName] = useState<string>('');
+
+  // 打开订单列表抽屉
+  const handleViewOrders = (record: any) => {
+    setSelectedProviderId(record._id || record.id);
+    setSelectedProviderName(record.name || '服务人员');
+    setDrawerVisible(true);
+  };
+
   return (
+    <>
     <GenericCrud
       rowKey="_id"
       headerTitle="服务人员管理"
@@ -36,7 +51,7 @@ export default function ServiceProviderPage() {
             entityName: 'community',
             displayField: 'name', // 显示社区名称
             valueField: '_id',    // 使用 _id 作为值
-          },
+          }, 
         },
         // 字段覆盖配置
         fieldOverrides: {
@@ -95,28 +110,7 @@ export default function ServiceProviderPage() {
             hideInSearch: true,
           },
 
-          // 可服务的分类
-          categories: {
-            label: '可服务的分类',
-            valueType: 'textarea',
-            hideInSearch: true,
-            fieldProps: {
-              rows: 2,
-              placeholder: 'JSON数组格式，如：["cleaning", "repair"]',
-            },
-          },
-
-          // 可提供的服务ID列表
-          serviceIds: {
-            label: '可提供的服务',
-            valueType: 'textarea',
-            hideInSearch: true,
-            hideInTable: true,
-            fieldProps: {
-              rows: 2,
-              placeholder: 'JSON数组格式，如：["id1", "id2"]',
-            },
-          },
+         
 
           // 平均评分
           rating: {
@@ -280,6 +274,45 @@ export default function ServiceProviderPage() {
         onError: (error, operation) => {
         },
       }}
+
+      // 自定义操作列按钮
+      renderItemActions={(record, { handleEdit, handleDelete }) => {
+        return (
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {/* 查看订单按钮 */}
+            <Button
+              type="link"
+              icon={<UnorderedListOutlined />}
+              onClick={() => handleViewOrders(record)}
+              style={{ padding: '4px 8px' }}
+            >
+              查看订单
+            </Button>
+
+            {/* 编辑按钮 */}
+            <Button
+              type="link"
+              onClick={() => handleEdit()}
+              style={{ padding: '4px 8px' }}
+            >
+              编辑
+            </Button>
+          </div>
+        );
+      }}
     />
+
+    {/* 关联订单抽屉 */}
+    <Drawer
+      title={`${selectedProviderName} - 关联订单`}
+      placement="right"
+      width={1400}
+      open={drawerVisible}
+      onClose={() => setDrawerVisible(false)}
+      destroyOnClose
+    >
+      <ProviderOrderList providerId={selectedProviderId} />
+    </Drawer>
+  </>
   );
 }

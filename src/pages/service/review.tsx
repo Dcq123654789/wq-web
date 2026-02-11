@@ -22,43 +22,31 @@ export default function ServiceReviewPage() {
       // 动态实体配置
       dynamicEntity={{
         entityClassName: 'ServiceReview',
-        entityName: 'wqservice_review',
+        entityName: 'servicereview',
 
         // 排除的字段
         excludeFields: [
-          'order',            // 关联对象
-          'user',             // 关联对象
-          'service',          // 关联对象
-          'provider',         // 关联对象
+        
         ],
-
-        // 字段覆盖配置
-        fieldOverrides: {
-          // 订单ID
+        relations: {
+          // communityId 字段关联到 Community 实体
           orderId: {
-            label: '订单ID',
-            hideInForm: true,
+            entityClassName: 'ServiceOrder',
+            entityName: 'ServiceOrder', 
+            valueField: '_id',    // 使用 _id 作为值
           },
-
-          // 用户ID
-          userId: {
-            label: '用户ID',
-            hideInForm: true,
-          },
-
-          // 服务ID
-          serviceId: {
-            label: '服务ID',
-            hideInForm: true,
-          },
-
-          // 服务人员ID
-          providerId: {
-            label: '服务人员ID',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
+        },
+        // 字段覆盖配置
+        fieldOverrides: { 
+          orderId: {
+            label: '服务项目',
+            hideInForm: false,  // 创建时需要填写
+            required: true,
+            // ⭐ 自动填充配置：选择服务后自动填充相关字段
+            autoFill: {
+              providerId:'providerId'
+            },
+          }, 
           // 总分
           rating: {
             label: '总分',
@@ -72,49 +60,7 @@ export default function ServiceReviewPage() {
               return <Rate disabled value={record.rating} />;
             },
           },
-
-          // 态度评分
-          attitudeRating: {
-            label: '态度评分',
-            valueType: 'digit',
-            hideInSearch: true,
-            fieldProps: {
-              min: 1,
-              max: 5,
-            },
-            renderTable: (_: any, record: any) => {
-              return record.attitudeRating ? <Rate disabled value={record.attitudeRating} /> : '-';
-            },
-          },
-
-          // 质量评分
-          qualityRating: {
-            label: '质量评分',
-            valueType: 'digit',
-            hideInSearch: true,
-            fieldProps: {
-              min: 1,
-              max: 5,
-            },
-            renderTable: (_: any, record: any) => {
-              return record.qualityRating ? <Rate disabled value={record.qualityRating} /> : '-';
-            },
-          },
-
-          // 守时评分
-          punctualityRating: {
-            label: '守时评分',
-            valueType: 'digit',
-            hideInSearch: true,
-            fieldProps: {
-              min: 1,
-              max: 5,
-            },
-            renderTable: (_: any, record: any) => {
-              return record.punctualityRating ? <Rate disabled value={record.punctualityRating} /> : '-';
-            },
-          },
-
+ 
           // 评价文字
           content: {
             label: '评价内容',
@@ -162,90 +108,13 @@ export default function ServiceReviewPage() {
               rows: 2,
               placeholder: 'JSON数组格式，如：["服务好", "准时"]',
             },
-          },
-
-          // 追评内容
-          additionalContent: {
-            label: '追评内容',
-            valueType: 'textarea',
-            hideInSearch: true,
-            hideInForm: true, // 追评由用户在前端操作
-            fieldProps: {
-              rows: 3,
-            },
-          },
-
-          // 追评时间
-          additionalTime: {
-            label: '追评时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 商家回复内容
-          replyContent: {
-            label: '商家回复',
-            valueType: 'textarea',
-            hideInSearch: true,
-            fieldProps: {
-              rows: 3,
-            },
-          },
-
-          // 商家回复时间
-          replyTime: {
-            label: '回复时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 是否匿名
-          isAnonymous: {
-            label: '是否匿名',
-            valueType: 'select',
-            valueEnum: {
-              true: { text: '匿名', status: 'Warning' },
-              false: { text: '公开', status: 'Success' },
-            },
-            initialValue: false,
-          },
-
-          // 是否显示
-          isVisible: {
-            label: '是否显示',
-            valueType: 'select',
-            valueEnum: {
-              true: { text: '显示', status: 'Success' },
-              false: { text: '隐藏', status: 'Default' },
-            },
-            initialValue: true,
-          },
-
-          // 创建时间
-          createTime: {
-            label: '评价时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-            sorter: true,
-          },
-
-          // 更新时间
-          updateTime: {
-            label: '更新时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-            sorter: true,
-          },
+          }, 
         },
       }}
 
       // 功能配置
       features={{
-        create: false,  // 评价由用户在前端创建
+        create: true,   // 允许后台手动创建评价
         update: true,   // 允许商家回复、显示/隐藏等操作
         delete: true,   // 允许删除违规评价
         batchDelete: true,
@@ -267,6 +136,10 @@ export default function ServiceReviewPage() {
             pageSizeOptions: ['10', '20', '50', '100'],
           },
           scroll: { x: 2400 },
+        },
+        createModal: {
+          title: '新建服务评价',
+          width: 800,
         },
         updateModal: {
           title: '编辑评价',

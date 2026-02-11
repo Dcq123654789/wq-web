@@ -133,8 +133,20 @@ const DynamicForm: React.FC<any> = ({
                   <>
                     <RelationSelect
                       value={value}
-                      onChange={(val: any) => {
+                      onChange={(val: any, record: any) => {
                         form.setFieldValue(fieldName, val);
+
+                        // ⭐ 自动填充功能：根据配置自动填充其他字段
+                        const autoFill = (field as any).autoFill;
+                        if (autoFill && record) {
+                          Object.keys(autoFill).forEach((targetField) => {
+                            const sourceField = autoFill[targetField];
+                            // 从选中的记录中获取值并设置到目标字段
+                            if (record[sourceField] !== undefined) {
+                              form.setFieldValue(targetField, record[sourceField]);
+                            }
+                          });
+                        }
                       }}
                       relationConfig={(field as any).relationConfig}
                       mode={mode}

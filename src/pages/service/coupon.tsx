@@ -21,7 +21,7 @@ export default function ServiceCouponPage() {
       // 动态实体配置
       dynamicEntity={{
         entityClassName: 'ServiceCoupon',
-        entityName: 'wqservice_coupon',
+        entityName: 'servicecoupon',
 
         // 排除的字段
         excludeFields: [
@@ -29,16 +29,7 @@ export default function ServiceCouponPage() {
         ],
 
         // 字段覆盖配置
-        fieldOverrides: {
-          // 优惠券编码
-          code: {
-            label: '优惠券编码',
-            required: true,
-            rules: [
-              { required: true, message: '请输入优惠券编码' },
-              { max: 50, message: '编码最多50个字符' },
-            ],
-          },
+        fieldOverrides: { 
 
           // 优惠券名称
           name: {
@@ -48,19 +39,8 @@ export default function ServiceCouponPage() {
               { required: true, message: '请输入优惠券名称' },
               { max: 100, message: '名称最多100个字符' },
             ],
-          },
-
-          // 优惠券类型
-          type: {
-            label: '优惠券类型',
-            valueType: 'select',
-            valueEnum: {
-              1: { text: '减免金额', status: 'Processing' },
-              2: { text: '折扣比例', status: 'Success' },
-              3: { text: '免费服务', status: 'Warning' },
-            },
-            required: true,
-          },
+          }, 
+         
 
           // 优惠金额
           amount: {
@@ -96,32 +76,8 @@ export default function ServiceCouponPage() {
               precision: 2,
               min: 0,
             },
-          },
-
-          // 适用服务ID列表
-          applicableServices: {
-            label: '适用服务',
-            valueType: 'textarea',
-            hideInSearch: true,
-            hideInTable: true,
-            fieldProps: {
-              rows: 3,
-              placeholder: 'JSON数组格式，如：["id1", "id2"]，为空表示适用所有服务',
-            },
-          },
-
-          // 适用服务分类列表
-          applicableCategories: {
-            label: '适用服务分类',
-            valueType: 'textarea',
-            hideInSearch: true,
-            hideInTable: true,
-            fieldProps: {
-              rows: 3,
-              placeholder: 'JSON数组格式，如：["cleaning", "repair"]，为空表示适用所有分类',
-            },
-          },
-
+          }, 
+         
           // 开始时间
           startTime: {
             label: '开始时间',
@@ -196,25 +152,8 @@ export default function ServiceCouponPage() {
             fieldProps: {
               rows: 4,
             },
-          },
-
-          // 创建时间
-          createTime: {
-            label: '创建时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-            sorter: true,
-          },
-
-          // 更新时间
-          updateTime: {
-            label: '更新时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-            sorter: true,
-          },
+          }, 
+         
         },
       }}
 
@@ -254,14 +193,9 @@ export default function ServiceCouponPage() {
       }}
 
       // 表单默认值
-      data={{
-        type: 1,
-        status: 1,
-        receivedCount: 0,
-        usedCount: 0,
+      data={{ 
         totalCount: 999999,
-        perUserLimit: 1,
-        minAmount: 0,
+        
       }}
 
       // 回调函数

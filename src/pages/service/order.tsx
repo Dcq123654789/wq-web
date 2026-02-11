@@ -1,6 +1,7 @@
 import React from 'react';
 import { GenericCrud } from '@/components/GenericCrud';
 import { Image, Tag } from 'antd';
+import FileUpload from '@/components/FileUpload';
 
 /**
  * 服务订单管理页面
@@ -21,121 +22,128 @@ export default function ServiceOrderPage() {
       // 动态实体配置
       dynamicEntity={{
         entityClassName: 'ServiceOrder',
-        entityName: 'wqservice_order',
+        entityName: 'serviceorder',
 
         // 排除的字段
         excludeFields: [
-          'orderId',          // 冗余字段
-          'service',          // 关联对象
-          'user',             // 关联对象
-          'provider',         // 关联对象
-          'proofImages',      // 服务完成凭证图片（内部使用）
+        
         ],
-
+        relations: {
+          // communityId 字段关联到 Community 实体
+          userId: {
+            entityClassName: 'WqUser',
+            entityName: 'WqUser',
+            displayField: 'nickname', // 显示社区名称
+            valueField: '_id',    // 使用 _id 作为值
+          },
+          serviceId: {
+            entityClassName: 'WqService',
+            entityName: 'WqService',
+            displayField: 'name', // 显示社区名称
+            valueField: '_id',    // 使用 _id 作为值
+          },
+          couponId: {
+            entityClassName: 'ServiceCoupon',
+            entityName: 'ServiceCoupon',
+            displayField: 'name',  
+            valueField: '_id',     
+          },
+          providerId: {
+            entityClassName: 'ServiceProvider',
+            entityName: 'ServiceProvider',
+            displayField: 'name', // 显示社区名称
+            valueField: '_id',    // 使用 _id 作为值
+          }, 
+        },
         // 字段覆盖配置
         fieldOverrides: {
-          // 订单编号
-          orderNo: {
-            label: '订单编号',
-            hideInForm: true,
-          },
-
+         
           // 用户ID
           userId: {
             label: '用户ID',
-            hideInForm: true,
+            hideInForm: false,  // 创建时需要填写
+            required: true,
           },
 
           // 服务ID
           serviceId: {
-            label: '服务ID',
-            hideInForm: true,
+            label: '服务项目',
+            hideInForm: false,  // 创建时需要填写
+            required: true,
+            // ⭐ 自动填充配置：选择服务后自动填充相关字段
+            autoFill: {
+              serviceName: 'name',        // 服务名称 <- name 
+              originalPrice: 'price',     // 原价 <- price
+            },
           },
 
           // 服务名称（冗余）
           serviceName: {
             label: '服务名称',
-            hideInForm: true,
+            hideInForm: false,  // 允许查看，但通常是自动填充的
           },
-
-          // 服务海报（冗余）
-          servicePoster: {
-            label: '服务海报',
-            valueType: 'image',
-            hideInForm: true,
-            hideInSearch: true,
-            renderTable: (_: any, record: any) => {
-              const value = record.servicePoster;
-              if (!value) return '-';
-              return (
-                <Image
-                  src={value}
-                  alt="服务海报"
-                  width={40}
-                  height={40}
-                  style={{ objectFit: 'cover', borderRadius: 4 }}
-                />
-              );
+ 
+          // 服务人员ID
+          providerId: {
+            label: '服务人员',
+            hideInForm: false,  // 允许选择
+            required: false,   // 非必填，派单时再指定
+            // ⭐ 自动填充配置：选择服务人员后自动填充相关字段
+            autoFill: {
+              providerName: 'name',    // 服务人员姓名 <- name
+              providerPhone: 'phone',  // 服务人员电话 <- phone
             },
           },
+
+          // 服务人员姓名（冗余）
+          providerName: {
+            label: '服务人员姓名',
+            hideInForm: false,  // 允许查看
+            hideInSearch: true,
+          },
+
+          // 服务人员电话（冗余）
+          providerPhone: {
+            label: '服务人员电话',
+            hideInForm: false,  // 允许查看
+            hideInSearch: true,
+          },
+
 
           // 预约日期
           bookingDate: {
             label: '预约日期',
             valueType: 'date',
-            hideInForm: true,
+            hideInForm: false,  // 创建时需要填写
+            required: true,
           },
 
           // 预约时间段
           timeSlot: {
             label: '预约时间段',
-            hideInForm: true,
+            hideInForm: false,  // 创建时需要填写
+            required: true,
           },
 
           // 联系人姓名
           contactName: {
             label: '联系人姓名',
-            hideInForm: true,
+            hideInForm: false,  // 创建时需要填写
+            required: true,
           },
 
           // 联系电话
           contactPhone: {
             label: '联系电话',
-            hideInForm: true,
-          },
-
-          // 省份
-          province: {
-            label: '省份',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 城市
-          city: {
-            label: '城市',
-            hideInForm: true,
-          },
-
-          // 区县
-          district: {
-            label: '区县',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 详细地址
-          detailAddress: {
-            label: '详细地址',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
+            hideInForm: false,  // 创建时需要填写
+            required: true,
+          }, 
           // 原价
           originalPrice: {
             label: '原价（元）',
             valueType: 'digit',
-            hideInForm: true,
+            hideInForm: false,  // 创建时需要填写
+            required: true,
             fieldProps: {
               prefix: '¥',
               precision: 2,
@@ -146,7 +154,8 @@ export default function ServiceOrderPage() {
           finalPrice: {
             label: '实付金额（元）',
             valueType: 'digit',
-            hideInForm: true,
+            hideInForm: false,  // 创建时需要填写
+            required: true,
             fieldProps: {
               prefix: '¥',
               precision: 2,
@@ -157,147 +166,93 @@ export default function ServiceOrderPage() {
           discountAmount: {
             label: '优惠金额（元）',
             valueType: 'digit',
-            hideInForm: true,
+            hideInForm: false,  // 创建时需要填写
             fieldProps: {
               prefix: '¥',
               precision: 2,
             },
-          },
-
-          // 优惠券ID
-          couponId: {
-            label: '优惠券ID',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 订单状态
-          status: {
-            label: '订单状态',
-            valueType: 'select',
-            valueEnum: {
-              0: { text: '待支付', status: 'Default' },
-              1: { text: '待接单', status: 'Processing' },
-              2: { text: '已接单', status: 'Success' },
-              3: { text: '服务中', status: 'Active' },
-              4: { text: '待评价', status: 'Warning' },
-              5: { text: '已完成', status: 'Success' },
-              6: { text: '已取消', status: 'Error' },
-              7: { text: '已退款', status: 'Error' },
-            },
-            initialValue: 0,
-          },
-
-          // 服务人员ID
-          providerId: {
-            label: '服务人员ID',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 服务人员姓名（冗余）
-          providerName: {
-            label: '服务人员',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 服务人员电话（冗余）
-          providerPhone: {
-            label: '服务人员电话',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
+          }, 
+  
+          
           // 支付时间
           payTime: {
             label: '支付时间',
             valueType: 'dateTime',
             hideInForm: true,
             hideInSearch: true,
-          },
-
-          // 接单时间
-          acceptTime: {
-            label: '接单时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 服务开始时间
-          serviceStartTime: {
-            label: '服务开始时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 服务结束时间
-          serviceEndTime: {
-            label: '服务结束时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 完成时间
-          completeTime: {
-            label: '完成时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
-          // 取消时间
-          cancelTime: {
-            label: '取消时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-          },
-
+          },  
           // 用户备注
           remark: {
             label: '用户备注',
             valueType: 'textarea',
-            hideInForm: true,
+            hideInForm: false,  // 创建时可以填写
             hideInSearch: true,
           },
 
           // 取消原因
           cancelReason: {
             label: '取消原因',
-            hideInForm: true,
+            valueType: 'textarea',
+            hideInForm: false,  // 允许在表单中编辑
             hideInSearch: true,
           },
 
-          // 创建时间
-          createTime: {
-            label: '创建时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: false,
-            sorter: true,
+          // 服务完成凭证图片
+          proofImages: {
+            label: '完成凭证',
+            valueType: 'image',
+            hideInSearch: true,
+            renderTable: (_: any, record: any) => {
+              const value = record.proofImages;
+              if (!value) return '-';
+
+              // 处理字符串格式：将字符串解析为数组
+              let imageList: string[] = [];
+              if (typeof value === 'string') {
+                const cleaned = value.trim().replace(/^\[|\]$/g, '');
+                imageList = cleaned.split(',').map(url => url.trim()).filter(url => url);
+              } else if (Array.isArray(value)) {
+                imageList = value;
+              }
+
+              if (imageList.length === 0) return '-';
+
+              const previewImages = imageList.slice(0, 3).map((img: string, index: number) => (
+                <Image
+                  key={index}
+                  src={img}
+                  alt={`凭证${index + 1}`}
+                  width={30}
+                  height={30}
+                  style={{ objectFit: 'cover', borderRadius: 4, marginRight: 4 }}
+                />
+              ));
+              const count = imageList.length > 3 ? (
+                <span style={{ marginLeft: 4, color: '#999' }}>+{imageList.length - 3}</span>
+              ) : null;
+              return <span style={{ display: 'flex', alignItems: 'center' }}>{previewImages}{count}</span>;
+            },
+            renderFormItem: (props: any) => {
+              // 处理字符串格式：将字符串解析为数组
+              let value = props.value;
+              if (typeof value === 'string') {
+                const cleaned = value.trim().replace(/^\[|\]$/g, '');
+                value = cleaned.split(',').map(url => url.trim()).filter(url => url);
+              }
+              return <FileUpload {...props} value={value} uploadType="image" maxCount={9} />;
+            },
           },
 
-          // 更新时间
-          updateTime: {
-            label: '更新时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-            sorter: true,
-          },
+
         },
       }}
 
       // 功能配置
       features={{
-        create: false,  // 订单通常通过业务流程创建，不在后台手动创建
-        update: true,   // 允许修改订单状态等信息
-        delete: false,  // 订单通常不删除，只取消
-        batchDelete: false,
+        create: true,    // 允许后台手动创建订单
+        update: true,    // 允许修改订单状态等信息
+        delete: true,    // 允许删除订单
+        batchDelete: true, // 允许批量删除
         selection: true,
         export: false,
       }}
@@ -317,6 +272,10 @@ export default function ServiceOrderPage() {
           },
           scroll: { x: 2800 },
         },
+        createModal: {
+          title: '新建服务订单',
+          width: 800,
+        },
         updateModal: {
           title: '编辑订单',
           width: 800,
@@ -324,9 +283,7 @@ export default function ServiceOrderPage() {
       }}
 
       // 表单默认值
-      data={{
-        status: 0,
-        discountAmount: 0,
+      data={{ 
       }}
 
       // 回调函数

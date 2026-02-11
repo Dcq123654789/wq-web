@@ -22,7 +22,8 @@
       "Bash(pnpm install)",
       "Bash(pnpm install:*)",
       "Bash(powershell:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(yarn start:*)"
     ]
   }
 }

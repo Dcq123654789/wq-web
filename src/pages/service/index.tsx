@@ -99,9 +99,15 @@ export default function ServicePage() {
               ) : null;
               return <span style={{ display: 'flex', alignItems: 'center' }}>{previewImages}{count}</span>;
             },
-            renderFormItem: (props: any) => (
-              <FileUpload {...props} uploadType="image" maxCount={9} />
-            ),
+            renderFormItem: (props: any) => {
+              // 处理字符串格式：将字符串解析为数组
+              let value = props.value;
+              if (typeof value === 'string') {
+                const cleaned = value.trim().replace(/^\[|\]$/g, '');
+                value = cleaned.split(',').map(url => url.trim()).filter(url => url);
+              }
+              return <FileUpload {...props} value={value} uploadType="image" maxCount={9} />;
+            },
           },
 
           // 价格
@@ -116,16 +122,7 @@ export default function ServicePage() {
             },
           },
 
-          // 是否免费
-          isFree: {
-            label: '是否免费',
-            valueType: 'select',
-            valueEnum: {
-              true: { text: '免费', status: 'Success' },
-              false: { text: '付费', status: 'Default' },
-            },
-            initialValue: false,
-          },
+           
 
           // 已售数量
           sales: {
@@ -145,17 +142,7 @@ export default function ServicePage() {
             },
           },
 
-          // 服务规格说明
-          specifications: {
-            label: '服务规格说明',
-            valueType: 'textarea',
-            hideInSearch: true,
-            fieldProps: {
-              rows: 3,
-              placeholder: 'JSON格式，如：{"服务时长":"4小时","服务人数":"2人"}',
-            },
-          },
-
+         
           // 服务评分
           rating: {
             label: '服务评分',
@@ -206,23 +193,7 @@ export default function ServicePage() {
             },
           },
 
-          // 创建时间
-          createTime: {
-            label: '创建时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-            sorter: true,
-          },
-
-          // 更新时间
-          updateTime: {
-            label: '更新时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-            sorter: true,
-          },
+         
         },
       }}
 

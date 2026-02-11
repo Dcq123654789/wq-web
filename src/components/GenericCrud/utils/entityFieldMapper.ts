@@ -200,7 +200,7 @@ function isComplexType(typeName: string): boolean {
  * 根据字段名称的字数获取列宽
  * 每个中文字符约 16px，预留 40px padding
  */
-function getColumnWidth(fieldName: string, valueType: string): number | undefined {
+function getColumnWidth(fieldName: string, javaTypeName: string): number | undefined {
   // 获取字段标题
   const fieldTitle = fieldNameToTitle(fieldName);
   const titleLength = fieldTitle.length;
@@ -208,8 +208,8 @@ function getColumnWidth(fieldName: string, valueType: string): number | undefine
   // 基础宽度：字数 × 16px + 40px padding
   const calculatedWidth = Math.ceil(titleLength * 16) + 40;
 
-  // 最小宽度 80px，最大宽度 400px
-  const finalWidth = Math.max(80, Math.min(400, calculatedWidth));
+  // 最小宽度 100px，最大宽度 400px
+  const finalWidth = Math.max(100, Math.min(400, calculatedWidth));
 
   // 特殊字段的宽度调整
 
@@ -228,19 +228,17 @@ function getColumnWidth(fieldName: string, valueType: string): number | undefine
     return 100;
   }
 
-  // 数字类型 - 较窄
-  if (valueType === 'digit' || valueType === 'money') {
-    return 100;
-  }
-
   // 图片字段 - 固定宽度
-  if (valueType === 'image') {
+  if (fieldName === 'avatar' || fieldName === 'headImg' || fieldName === 'imageUrl' ||
+      fieldName === 'coverImage' || fieldName === 'images') {
     return 100;
   }
 
-  // 其他文本字段使用计算宽度
-  if (valueType === 'text' || valueType === 'textarea') {
-    return finalWidth;
+  // 数字类型（Integer, Long, Double, Float, BigDecimal等）- 较窄
+  const numericTypes = ['Integer', 'int', 'Long', 'long', 'Double', 'double', 'Float', 'float',
+                        'Short', 'short', 'BigDecimal', 'bigDecimal'];
+  if (numericTypes.some(t => javaTypeName.includes(t))) {
+    return 100;
   }
 
   // 默认返回计算宽度

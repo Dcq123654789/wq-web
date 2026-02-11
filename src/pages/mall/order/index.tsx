@@ -146,25 +146,7 @@ export default function OrderPage() {
             rules: [
               { max: 500, message: '订单备注最多500个字符' },
             ],
-          }, 
- 
-          // 创建时间
-          createTime: {
-            label: '创建时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-            sorter: true,
-          },
-
-          // 更新时间
-          updateTime: {
-            label: '更新时间',
-            valueType: 'dateTime',
-            hideInForm: true,
-            hideInSearch: true,
-            sorter: true,
-          },
+          },  
         },
       }}
 
